@@ -1,0 +1,32 @@
+{
+  "name": "evolve",
+  "main": "evolve.js",
+  "homepage": "https://www.methodswithclass.com",
+  "authors": [
+    "Christopher Polito <chris@mwithc.io>"
+  ],
+  "description": "A generic evolutionary algorithm written in JavaScript that takes in any program module that represents a problem to be optimized",
+  "keywords": [
+    "evolutionary",
+    "algorithms",
+    "genetic",
+    "generations",
+    "populations",
+    "individuals",
+    "optimization",
+    "maximization",
+    "minimization",
+    "maximum",
+    "minimum",
+    "solution",
+    "space"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
