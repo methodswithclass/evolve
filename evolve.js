@@ -469,9 +469,7 @@ application but are not related to the evolutionary algorithm, including them si
 					}, input.evdelay);
 				}
 				else {
-					//console.log("call complete", input.name);
-					// events.dispatch("evolve."+input.name+".complete");
-					input.completeEvolve();
+					input.completeEvolve("finished");
 				}
 
 			});
