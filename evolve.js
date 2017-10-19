@@ -78,6 +78,7 @@ application but are not related to the evolutionary algorithm, including them si
 		var self = this;
 
 		var i = 0;
+		var active = true;
 
 		self.name = params.input.name;
 
@@ -224,19 +225,27 @@ application but are not related to the evolutionary algorithm, including them si
 
 			//console.log("run org", self.index);
 
-			program.run({
-				gen:self.generation, 
-				index:self.index, 
-				input:input, 
-				dna:self.dna
-			}, function (x) {
+			if (active) {
 
-				self.runs = x.runs;
-				self.fitness = x.avg;
-				self.success = x.success;
+				program.run({
+					gen:self.generation, 
+					index:self.index, 
+					input:input, 
+					dna:self.dna
+				}, function (x) {
 
-				complete();
-			});
+					self.runs = x.runs;
+					self.fitness = x.avg;
+					self.success = x.success;
+
+					complete();
+				});
+			}
+		}
+
+		self.hardStop = function () {
+
+			active = false;
 		}
 
 	}
@@ -246,7 +255,10 @@ application but are not related to the evolutionary algorithm, including them si
 			
 		var self = this;
 
+		var runtimer;
+		var active = true;
 		var i = 0;
+		var indi = 0;
 		var input = params.input;
 		var task = input.goal;
 		self.total = input.pop;
@@ -276,12 +288,12 @@ application but are not related to the evolutionary algorithm, including them si
 
 		var runPop = function (complete) {
 
-			var indi = 0;
+			indi = 0;
 			var running = true;
 
 			console.log("run population");
 
-			var runtimer = setInterval(function () {
+			runtimer = setInterval(function () {
 
 				if (running) {
 
@@ -289,21 +301,24 @@ application but are not related to the evolutionary algorithm, including them si
 
 					// console.log("self.pop", self.pop, org);
 
-					self.pop[indi].run(function () {
+					if (active) {
 
-						indi++;
+						self.pop[indi].run(function () {
 
-						if (indi < self.total) {
-							running = true;
-						}
-						else {
-							clearInterval(runtimer);
-							runtimer = {};
-							runtimer = null;
+							indi++;
 
-							complete();
-						}
-					});
+							if (indi < self.total) {
+								running = true;
+							}
+							else {
+								clearInterval(runtimer);
+								runtimer = {};
+								runtimer = null;
+
+								complete();
+							}
+						});
+					}
 					
 				}
 
@@ -439,6 +454,16 @@ application but are not related to the evolutionary algorithm, including them si
 			});
 
 		}
+
+		this.hardStop = function () {
+
+			active = false;
+
+			clearInterval(runtimer);
+
+			self.pop[indi].hardStop();
+
+		}
 		
 	}
 
@@ -451,28 +476,35 @@ application but are not related to the evolutionary algorithm, including them si
 		var era = [];
 		var now = 0;
 		var input;
+		var active = true;
 		
 		this.step = function () {
 
 			console.log(" ");
 			console.log("evolve", now);
 
-			era[now].turnover(function (x) {
+			if (active) {
 
-				now++;
+				era[now].turnover(function (x) {
 
-				era[now] = x.next;
+					now++;
 
-				if (now < input.gens) {
-					setTimeout(function () {
-						self.step();
-					}, input.evdelay);
-				}
-				else {
-					input.completeEvolve("finished");
-				}
+					era[now] = x.next;
 
-			});
+					if (now < input.gens) {
+						setTimeout(function () {
+							self.step();
+						}, input.evdelay);
+					}
+					else {
+						input.completeEvolve("finished");
+					}
+
+				});
+			}
+			else {
+				input.completeEvolve("finished");
+			}
 
 		}
 
@@ -509,6 +541,15 @@ application but are not related to the evolutionary algorithm, including them si
 				self.set(_input);
 				self.step();
 			}
+		}
+
+		this.hardStop = function (_input) {
+
+			this.set(_input);
+
+			active = false;
+
+			era[now].hardStop();
 		}
 
 	}
