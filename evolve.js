@@ -302,6 +302,7 @@ application but are not related to the evolutionary algorithm, including them si
 
 			indi = 0;
 			var running = true;
+			active = true;
 
 			console.log("run population");
 
