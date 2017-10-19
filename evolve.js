@@ -245,6 +245,8 @@ application but are not related to the evolutionary algorithm, including them si
 
 		self.hardStop = function () {
 
+			console.log("individual hard stop", self.index);
+
 			active = false;
 		}
 
@@ -457,10 +459,10 @@ application but are not related to the evolutionary algorithm, including them si
 
 		this.hardStop = function () {
 
+			console.log("generation hard stop", indi);
+
 			active = false;
-
 			clearInterval(runtimer);
-
 			self.pop[indi].hardStop();
 
 		}
@@ -545,10 +547,10 @@ application but are not related to the evolutionary algorithm, including them si
 
 		this.hardStop = function (_input) {
 
+			console.log("evolve hard stop", _input);
+
 			this.set(_input);
-
 			active = false;
-
 			era[now].hardStop();
 		}
 
