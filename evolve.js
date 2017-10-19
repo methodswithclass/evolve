@@ -261,7 +261,6 @@ application but are not related to the evolutionary algorithm, including them si
 		var runtimer;
 		var active = true;
 		var i = 0;
-		var indi = 0;
 		var input = params.input;
 		var task = input.goal;
 		self.total = input.pop;
@@ -270,6 +269,9 @@ application but are not related to the evolutionary algorithm, including them si
 
 
 		var initializePop = function () {
+
+
+			var indi = 0;
 
 			if (params && params.pop) {
 				//console.log("input generation", self.index, "pop", input.pop.length);
