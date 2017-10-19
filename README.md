@@ -28,3 +28,7 @@ To instantiate the Evolve program, create a new object with the following inputs
 then start the evolution process like this:
 
 	evolve.module.run(input);
+
+
+Visit https://evolve.methodswithclass.com to see how this package can be applied to various problems like machine learning and image recognition. 
+
