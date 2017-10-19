@@ -248,6 +248,7 @@ application but are not related to the evolutionary algorithm, including them si
 			console.log("individual hard stop", self.index);
 
 			active = false;
+			self.runs = [];
 		}
 
 	}
@@ -266,27 +267,34 @@ application but are not related to the evolutionary algorithm, including them si
 		self.total = input.pop;
 		self.pop = [];
 		self.index = 1;
-		
-		if (params && params.pop) {
-			//console.log("input generation", self.index, "pop", input.pop.length);
-			self.pop = params.pop;
-			self.total = params.pop.length;
-			self.index = params.index;
-		}
-		else {
+
+
+		var initializePop = function () {
+
+			if (params && params.pop) {
+				//console.log("input generation", self.index, "pop", input.pop.length);
+				self.pop = params.pop;
+				self.total = params.pop.length;
+				self.index = params.index;
+			}
+			else {
+				i = 0;
+				while (i < self.total) {
+					self.pop[i] = new individual({gen:self.index, input:input});
+					i++;
+				}
+			}
+
 			i = 0;
 			while (i < self.total) {
-				self.pop[i] = new individual({gen:self.index, input:input});
+				self.pop[i].index = i;
+				//self.pop[i].print();
 				i++;
 			}
-		}
 
-		i = 0;
-		while (i < self.total) {
-			self.pop[i].index = i;
-			//self.pop[i].print();
-			i++;
 		}
+		
+		initializePop();
 
 		var runPop = function (complete) {
 
@@ -463,8 +471,9 @@ application but are not related to the evolutionary algorithm, including them si
 
 			active = false;
 			clearInterval(runtimer);
+			runtimer = null;
 			self.pop[indi].hardStop();
-
+			initializePop();
 		}
 		
 	}
