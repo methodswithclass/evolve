@@ -497,13 +497,10 @@ application but are not related to the evolutionary algorithm, including them si
 						}, input.evdelay);
 					}
 					else {
-						input.completeEvolve("finished");
+						input.completeEvolve();
 					}
 
 				});
-			}
-			else {
-				input.completeEvolve("finished");
 			}
 
 		}
@@ -520,6 +517,7 @@ application but are not related to the evolutionary algorithm, including them si
 			self.set(_input);
 
 			now = 0;
+			active = true;
 
 			era.length = 0;
 			era = null;
@@ -531,6 +529,8 @@ application but are not related to the evolutionary algorithm, including them si
 		this.run = function (_input) {
 
 			console.log("run evolve");
+
+			active = true;
 
 			if (_input.goal != input.goal || _input.pop != input.pop) {
 				console.log("restart evolve");
