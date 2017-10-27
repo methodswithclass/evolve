@@ -249,6 +249,7 @@ application but are not related to the evolutionary algorithm, including them si
 
 			active = false;
 			self.runs = [];
+			program.hardStop();
 		}
 
 	}
