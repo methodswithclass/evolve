@@ -10,7 +10,9 @@ application but are not related to the evolutionary algorithm, including them si
 */
 
 
-(function (window) {
+var obj = {};
+
+(function (obj) {
 
 
 	var sum = function (array, $callback) {
@@ -295,6 +297,12 @@ application but are not related to the evolutionary algorithm, including them si
 				i++;
 			}
 
+			input.setEvdata({
+				index:self.index,
+				best:self.pop[0],
+				worst:self.pop[self.pop.length-1]
+			})
+
 		}
 		
 		initializePop();
@@ -570,11 +578,17 @@ application but are not related to the evolutionary algorithm, including them si
 	}
 
 
-	window.evolve = {
+	obj.evolve = {
 		module:new evolveModule()
 	}
 
 
 
 
-})(window);
+})(obj);
+
+
+window.evolve = obj.evolve;
+
+
+module.exports = obj.evolve;
