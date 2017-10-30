@@ -588,7 +588,16 @@ var obj = {};
 })(obj);
 
 
-window.evolve = obj.evolve;
+try {
+	window.evolve = obj.evolve;
+}
+catch(e) {
+	console.log(e.message);
+}
 
-
-module.exports = obj.evolve;
+try {
+	module.exports = obj.evolve;
+}
+catch (e) {
+	console.log(e.message);
+}
