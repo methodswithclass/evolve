@@ -269,6 +269,8 @@ var obj = {};
 		self.total = input.pop;
 		self.pop = [];
 		self.index = 1;
+		self.best;
+		self.worst;
 
 
 		var initializePop = function () {
@@ -307,6 +309,36 @@ var obj = {};
 		
 		initializePop();
 
+		var rank = function () {
+
+			self.pop.sort(function (a,b) {
+				return (task == "min" ? a.fitness - b.fitness : b.fitness - a.fitness);
+			});
+
+
+			var best = self.pop[0];
+			var worst = self.pop[self.pop.length-1];
+
+			self.best = {
+				index:self.index,
+				dna:best.dna,
+				fitness:best.fitness,
+				runs:best.runs
+			}
+
+			self.worst = {
+				index:self.index,
+				dna:worst.dna,
+				fitness:worst.fitness,
+				runs:worst.runs
+			}
+
+			return {
+				best:self.best,
+				worst:self.worst
+			}
+		}
+
 		var runPop = function (complete) {
 
 			indi = 0;
@@ -327,6 +359,8 @@ var obj = {};
 
 						self.pop[indi].run(function () {
 
+							rank()
+
 							indi++;
 
 							if (indi < self.total) {
@@ -346,26 +380,6 @@ var obj = {};
 
 			}, 10);
 			
-		}
-
-		var rank = function () {
-
-			self.pop.sort(function (a,b) {
-				return (task == "min" ? a.fitness - b.fitness : b.fitness - a.fitness);
-			});
-
-			self.pop.forEach(function (value, index, array) {
-
-				value.index = index;
-			});
-
-			//console.log(self.pop[0].fitness);
-			//console.log(self.pop[self.total-1].fitness);
-
-			return {
-				best:self.pop[0],
-				worst:self.pop[self.total-1]
-			}
 		}
 
 		var getIndex = function (factor) {
@@ -460,11 +474,13 @@ var obj = {};
 				// 	}
 				// });
 
-				input.setEvdata({
-					index:self.index,
-					best:ext.best,
-					worst:ext.worst
-				})
+				if (active) {
+					input.setEvdata({
+						index:self.index,
+						best:ext.best,
+						worst:ext.worst
+					})
+				}
 
 				var num_parents = 2;
 				var children = reproduce(num_parents);
@@ -514,12 +530,19 @@ var obj = {};
 
 					era[now] = x.next;
 
-					if (now < input.gens) {
+					if (now+1 < input.gens) {
 						setTimeout(function () {
 							self.step();
 						}, input.evdelay);
 					}
 					else {
+
+						input.setEvdata({
+							index:now-1,
+							best:era[now-1].best,
+							worst:era[now-1].worst
+						})
+
 						input.completeEvolve();
 					}
 
@@ -573,6 +596,13 @@ var obj = {};
 			this.set(_input);
 			active = false;
 			era[now].hardStop();
+
+			input.setEvdata({
+				index:now-1,
+				best:era[now-1].best,
+				worst:era[now-1].worst
+			})
+
 		}
 
 	}
