@@ -508,15 +508,15 @@ var obj = {};
 
 		var getGeneration = function () {
 
-			var generation = {};
-			generation.pop = [];
-			generation.index = self.index;
-			generation.best = this.best;
-			generation.worst = this.worst;
+			var thisGen = {};
+			thisGen.pop = [];
+			thisGen.index = self.index;
+			thisGen.best = this.best;
+			thisGen.worst = this.worst;
 
 			for (var i in self.pop) {
 
-				generation.pop.push({
+				thisGen.pop.push({
 					index:i,
 					dna:self.pop[i].dna,
 					fitness:self.pop[i].fitness,
@@ -524,7 +524,7 @@ var obj = {};
 				})
 			}
 
-			return generation;
+			return thisGen;
 		}
 
 		self.turnover = function (complete) {
@@ -533,14 +533,14 @@ var obj = {};
 
 			runPop(function () {
 
-				var generation = getGeneration();
+				var thisGen = getGeneration();
 
 
 				var num_parents = 2;
 				var children = reproduce(num_parents);
 
 				complete({
-					generation:generation,
+					generation:thisGen,
 					next:new generation({index:self.index + 1, input:input, pop:children})
 				});
 
