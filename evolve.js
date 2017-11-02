@@ -316,6 +316,12 @@ var obj = {};
 			});
 
 
+			self.pop.map(function(value, index) {
+
+				value.index = index;
+			});
+
+
 			var best = self.pop[0];
 			var worst = self.pop[self.pop.length-1];
 
