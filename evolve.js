@@ -299,10 +299,24 @@ var obj = {};
 				i++;
 			}
 
+			self.best = {
+				index:0,
+				dna:self.pop[0].dna,
+				fitness:self.pop[0].fitness,
+				runs:self.pop[0].runs
+			}
+
+			self.worst = {
+				index:self.pop.length-1,
+				dna:self.pop[self.pop.length-1].dna,
+				fitness:self.pop[self.pop.length-1].fitness,
+				runs:self.pop[self.pop.length-1].runs
+			}
+
 			input.setEvdata({
 				index:self.index,
-				best:self.pop[0],
-				worst:self.pop[self.pop.length-1]
+				best:self.best,
+				worst:self.worst
 			})
 
 		}
