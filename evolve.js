@@ -533,7 +533,7 @@ var obj = {};
 
 			runPop(function () {
 
-				var generataion = getGeneration();
+				var generation = getGeneration();
 
 
 				var num_parents = 2;
