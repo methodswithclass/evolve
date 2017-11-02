@@ -703,8 +703,8 @@ var obj = {};
 
 			current = null;
 			
-			if (_input.pop) {
-				current = new generation({index:_input.gen, pop:_input.pop, input:input});
+			if (_input.generation) {
+				current = new generation({index:_input.gen, pop:_input.generation.pop, input:input});
 			}
 			else {
 				current = new generation({index:1, input:input});
