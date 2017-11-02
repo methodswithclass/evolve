@@ -628,6 +628,15 @@ var obj = {};
 					current = null;
 					current = x.next;
 
+
+					if (input.setEvdata) {
+						input.setEvdata({
+							index:now-1,
+							best:previous.best,
+							worst:previous.worst
+						})
+					}
+
 					if (now < input.gens) {
 						setTimeout(function () {
 							step();
