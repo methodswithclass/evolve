@@ -343,11 +343,6 @@ var obj = {};
 				runs:self.pop[self.pop.length-1].runs
 			}
 
-			ext = {
-				best:self.best,
-				worst:self.worst
-			}
-
 		}
 		
 		initializePop();
@@ -407,8 +402,6 @@ var obj = {};
 					if (active) {
 
 						self.pop[indi].run(function () {
-
-							rank();
 
 							indi++;
 
@@ -507,6 +500,8 @@ var obj = {};
 		}
 
 		var getGeneration = function () {
+
+			rank()
 
 			var thisGen = {};
 			thisGen.pop = [];
