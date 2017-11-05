@@ -626,6 +626,8 @@ var obj = {};
 
 			if (active) {
 
+				stepdataobj.gen = now;
+
 				era[index(now)].turnover(function (x) {
 
 					now++;
@@ -662,9 +664,7 @@ var obj = {};
 
 		self.getstepdata = function () {
 
-			stepdataobj.gen = now;
-
-			stepdataobj = current.getstepdata(stepdataobj);
+			stepdataobj = era[index(now)].getstepdata(stepdataobj);
 
 			return stepdataobj;
 		}
