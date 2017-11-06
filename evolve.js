@@ -285,10 +285,7 @@ var obj = {};
 
 			active = false;
 			self.runs = [];
-			program.hardStop({
-				gen:self.generation,
-				org:self.index
-			});
+			program.hardStop();
 		}
 
 	}
@@ -581,7 +578,7 @@ var obj = {};
 			active = false;
 			clearInterval(runtimer);
 			runtimer = null;
-			self.pop[indi].hardStop();
+			if (self.pop[indi]) self.pop[indi].hardStop();
 			initializePop();
 		}
 		
@@ -645,7 +642,7 @@ var obj = {};
 						})
 					}
 
-					if (now < self.input.gens) {
+					if (now <= self.input.gens) {
 						setTimeout(function () {
 							step();
 						}, self.input.evdelay);
@@ -672,16 +669,6 @@ var obj = {};
 		self.running = function () {
 
 			return active && (now < self.input.gens);
-		}
-
-		self.setLatest = function (x) {
-
-			era[index(now)] = x;
-		}
-
-		self.getLatest = function () {
-
-			return era[index(now)];
 		}
 
 		self.getBest = function () {
@@ -761,7 +748,7 @@ var obj = {};
 
 			self.set(_input);
 			active = false;
-			era[index(now)].hardStop();
+			if (era[index(now)]) era[index(now)].hardStop();
 
 			if (self.input && self.input.setEvdata) {
 				self.input.setEvdata({
