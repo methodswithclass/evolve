@@ -717,7 +717,7 @@ var obj = {};
 
 		self.run = function (_input) {
 
-			console.log("run evolve module", _input, self.input);
+			console.log("run evolve module");
 
 			active = true;
 
@@ -728,7 +728,7 @@ var obj = {};
 
 		self.restart = function (current, _input) {
 
-			console.log("restart evolve", _input, self.input);
+			console.log("restart evolve");
 
 			if (_input.goal != self.input.goal || _input.pop != self.input.pop) {
 				self.initialize(_input);
