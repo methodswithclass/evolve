@@ -764,7 +764,7 @@ var obj = {};
 
 
 	obj.evolve = {
-		module:new evolveModule()
+		module:evolveModule
 	}
 
 

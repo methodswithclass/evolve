@@ -1,6 +1,6 @@
 {
   "name": "mc-evolve",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "description": "An Evolutionary Algorithm in JavaScript that takes in a generic module that represents a problem to be optimized",
   "main": "evolve.js",
   "scripts": {
