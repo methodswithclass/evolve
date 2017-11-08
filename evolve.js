@@ -10,9 +10,7 @@ application but are not related to the evolutionary algorithm, including them si
 */
 
 
-var obj = {};
-
-(function (obj) {
+(function (window) {
 
 
 	var sum = function (array, $callback) {
@@ -80,11 +78,10 @@ var obj = {};
 		var self = this;
 
 		var i = 0;
-		var active = true;
 
 		self.name = params.input.name;
 
-		// console.log(self.name, "create organism");
+		console.log(self.name, "create organism");
 
 		var pdata = params.input.pdata;
 		var program = params.input.program;
@@ -96,22 +93,12 @@ var obj = {};
 		self.index;
 		self.parents = [];
 		var input = params.input;
-		var stepdataobj = {
-			name:"",
-			gen:1,
-			org:1,
-			run:1
-		}
-
-
 
 		if (params && params.dna) {
-			// console.log("has dna", params.dna);
 			self.dna = params.dna;
 			self.parents = params.parents;
 		}
 		else {
-			// console.log("create dna", pdata);
 			i = 0;
 			while (i < self.total) {
 				self.dna[i] = program.gene();
@@ -212,11 +199,6 @@ var obj = {};
 
 		}
 
-		self.setActive = function () {
-
-			active = true;
-		}
-
 		self.reproduce = function (mates) {
 
 			//console.log(mates)
@@ -238,123 +220,96 @@ var obj = {};
 			return offspring;
 		}
 
-		var stepdata = function (x) {
-
-			// console.log("step", x);
-
-			stepdataobj = x;
-		}
-
-		self.getstepdata = function ($stepdata) {
-
-			// console.log("step data run", stepdataobj.run, stepdataobj.fits);
-
-			stepdataobj.run = $stepdata.run;
-
-			return stepdataobj;
-		}
-
 		self.run = function (complete) {
 
-			// console.log("run org", self.index);
+			//console.log("run org", self.index);
 
-			if (active) {
+			program.run({
+				gen:self.generation, 
+				index:self.index, 
+				input:input, 
+				dna:self.dna
+			}, function (x) {
 
-				program.run({
-					gen:self.generation, 
-					index:self.index, 
-					input:input, 
-					dna:self.dna,
-					stepdata:stepdata
-				}, function (x) {
+				self.runs = x.runs;
+				self.fitness = x.avg;
+				self.success = x.success;
 
-					// console.log("complete run", self.index);
-
-					self.runs = x.runs;
-					self.fitness = x.avg;
-					self.success = x.success;
-
-					complete();
-				});
-			}
-		}
-
-		self.hardStop = function () {
-
-			console.log("individual hard stop", self.index);
-
-			active = false;
-			self.runs = [];
-			program.hardStop();
+				complete();
+			});
 		}
 
 	}
 
 
 	var generation = function (params) {
-		
-		console.log("create generation");
-
+			
 		var self = this;
 
-		var runtimer;
-		var active = true;
 		var i = 0;
-		var indi;
 		var input = params.input;
 		var task = input.goal;
 		self.total = input.pop;
 		self.pop = [];
 		self.index = 1;
-		self.best;
-		self.worst;
-
-
-		var initializePop = function () {
-
-
-			indi = 0;
-
-			if (params && params.pop) {
-				//console.log("input generation", self.index, "pop", input.pop.length);
-				self.pop = params.pop;
-				self.total = params.pop.length;
-				self.index = params.index;
-			}
-			else {
-				i = 0;
-				while (i < self.total) {
-					self.pop[i] = new individual({gen:self.index, input:input});
-					i++;
-				}
-			}
-
+		
+		if (params && params.pop) {
+			//console.log("input generation", self.index, "pop", input.pop.length);
+			self.pop = params.pop;
+			self.total = params.pop.length;
+			self.index = params.index;
+		}
+		else {
 			i = 0;
 			while (i < self.total) {
-				self.pop[i].index = i+1;
-				//self.pop[i].print();
+				self.pop[i] = new individual({gen:self.index, input:input});
 				i++;
 			}
-
-			console.log("index", self.index, self.total);
-
-			self.best = {
-				index:self.index,
-				dna:self.pop[0].dna,
-				fitness:self.pop[0].fitness,
-				runs:self.pop[0].runs
-			}
-
-			self.worst = {
-				index:self.index,
-				dna:self.pop[self.pop.length-1].dna,
-				fitness:self.pop[self.pop.length-1].fitness,
-				runs:self.pop[self.pop.length-1].runs
-			}
-
 		}
-		
-		initializePop();
+
+		i = 0;
+		while (i < self.total) {
+			self.pop[i].index = i;
+			//self.pop[i].print();
+			i++;
+		}
+
+		var runPop = function (complete) {
+
+			var indi = 0;
+			var running = true;
+
+			console.log("run population");
+
+			var runtimer = setInterval(function () {
+
+				if (running) {
+
+					running = false;
+
+					// console.log("self.pop", self.pop, org);
+
+					self.pop[indi].run(function () {
+
+						indi++;
+
+						if (indi < self.total) {
+							running = true;
+						}
+						else {
+							clearInterval(runtimer);
+							runtimer = {};
+							runtimer = null;
+
+							complete();
+						}
+					});
+					
+				}
+
+			}, 10);
+			
+		}
 
 		var rank = function () {
 
@@ -362,83 +317,18 @@ var obj = {};
 				return (task == "min" ? a.fitness - b.fitness : b.fitness - a.fitness);
 			});
 
-
-			self.pop.map(function(value, index) {
+			self.pop.forEach(function (value, index, array) {
 
 				value.index = index;
 			});
 
-
-			var best = self.pop[0];
-			var worst = self.pop[self.pop.length-1];
-
-			self.best = {
-				index:self.index,
-				dna:best.dna,
-				fitness:best.fitness,
-				runs:best.runs
-			}
-
-			self.worst = {
-				index:self.index,
-				dna:worst.dna,
-				fitness:worst.fitness,
-				runs:worst.runs
-			}
+			//console.log(self.pop[0].fitness);
+			//console.log(self.pop[self.total-1].fitness);
 
 			return {
-				best:self.best,
-				worst:self.worst
+				best:self.pop[0],
+				worst:self.pop[self.total-1]
 			}
-		}
-
-		var runPop = function (complete) {
-
-			indi = 0;
-			var running = true;
-			active = true;
-
-			// console.log("run population");
-
-			runtimer = setInterval(function () {
-
-				if (running) {
-
-					running = false;
-
-					// console.log("self.pop", self.pop, indi);
-
-					if (active) {
-
-						// console.log("run individual", indi);
-
-						self.pop[indi].setActive();
-
-						self.pop[indi].run(function () {
-
-							indi++;
-
-							// console.log("run next individual", indi);
-
-							if (indi < self.total) {
-								running = true;
-							}
-							else {
-								clearInterval(runtimer);
-								runtimer = {};
-								runtimer = null;
-
-								complete();
-							}
-						});
-
-
-					}
-					
-				}
-
-			}, 10);
-			
 		}
 
 		var getIndex = function (factor) {
@@ -514,72 +404,40 @@ var obj = {};
 			return children;
 		}
 
-		var getGeneration = function () {
-
-			rank();
-
-			var thisGen = {};
-			thisGen.pop = [];
-			thisGen.index = self.index;
-			thisGen.best = self.best;
-			thisGen.worst = self.worst;
-
-			thisGen.pop = [];
-
-			for (var i in self.pop) {
-
-				thisGen.pop.push({
-					index:i,
-					dna:self.pop[i].dna,
-					fitness:self.pop[i].fitness,
-					runs:self.pop[i].runs
-				})
-			}
-
-			return thisGen;
-		}
-
 		self.turnover = function (complete) {
 
 			console.log("turnover", self.index);
 
 			runPop(function () {
 
-				rank();
+				var ext = rank();
 
-				var thisGen = getGeneration();
+				console.log("push evdata");
 
+				// react.push({
+				// 	name:"ev." + input.name,
+				// 	state:{
+				// 		index:self.index,
+				// 		best:ext.best,
+				// 		worst:ext.worst
+				// 	}
+				// });
+
+				input.setEvdata({
+					index:self.index,
+					best:ext.best,
+					worst:ext.worst
+				})
 
 				var num_parents = 2;
 				var children = reproduce(num_parents);
 
 				complete({
-					generation:thisGen,
 					next:new generation({index:self.index + 1, input:input, pop:children})
 				});
 
 			});
 
-		}
-
-		this.getstepdata = function (stepdata) {
-
-			stepdata.org = indi;
-
-			stepdata = self.pop[indi].getstepdata(stepdata);
-
-			return stepdata;
-		}
-
-		this.hardStop = function () {
-
-			console.log("generation hard stop", indi);
-
-			active = false;
-			clearInterval(runtimer);
-			runtimer = null;
-			if (self.pop[indi]) self.pop[indi].hardStop();
-			initializePop();
 		}
 		
 	}
@@ -591,203 +449,78 @@ var obj = {};
 
 
 		var era = [];
-		var now = 1;
-		var active = true;
+		var now = 0;
+		var input;
 		
-		var stepdataobj = {
-			name:"",
-			gen:now + 1,
-			org:1,
-			run:1
-		}
-
-		var previous = {
-			index:0,
-			best:{},
-			worst:{},
-			pop:[]
-		}
-
-
-		self.input = {};
-
-		var index = function ($now) {
-
-			return $now - 1;
-		}
-		
-		var step = function () {
+		this.step = function () {
 
 			console.log(" ");
 			console.log("evolve", now);
 
-			if (active) {
+			era[now].turnover(function (x) {
 
-				stepdataobj.gen = now;
+				now++;
 
-				era[index(now)].turnover(function (x) {
+				era[now] = x.next;
 
-					now++;
-
-					previous = x.generation;
-					era[index(now)] = x.next;
-
-					// console.log("running evolve", self.input);
-
-					if (self.input && self.input.setEvdata) {
-						self.input.setEvdata({
-							index:now,
-							best:previous.best,
-							worst:previous.worst
-						})
-					}
-
-					if (now <= self.input.gens) {
-						setTimeout(function () {
-							step();
-						}, self.input.evdelay);
-					}
-					else {
-
-						if (self.input && self.input.completeEvolve) {
-							self.input.completeEvolve();
-						}
-					}
-
-				});
-			}
-
-		}
-
-		self.getstepdata = function () {
-
-			stepdataobj = era[index(now)].getstepdata(stepdataobj);
-
-			return stepdataobj;
-		}
-
-		self.running = function () {
-
-			return active && (now < self.input.gens);
-		}
-
-		self.getBest = function () {
-
-			// console.log("get best");
-
-			// return era[gen].getRank();
-			return {
-				index:self.index,
-				best:{
-					dna:previous.best.dna,
-					runs:previous.best.runs,
-					fitness:previous.best.fitness
-				},
-				worst:{
-					dna:previous.best.dna,
-					runs:previous.worst.runs,
-					fitness:previous.worst.fitness
+				if (now < input.gens) {
+					setTimeout(function () {
+						self.step();
+					}, input.evdelay);
 				}
-			};
+				else {
+					//console.log("call complete", input.name);
+					// events.dispatch("evolve."+input.name+".complete");
+					input.completeEvolve();
+				}
+
+			});
+
 		}
 
-		self.set = function (_input) {
+		this.set = function (_input) {
 
-			self.input = _input;
+			input = _input;
 		}
 
-		self.instruct = function (program) {
-
-			program.instruct(self.getBest().best.dna);
-		}
-
-		self.initialize = function (_input) {
+		this.initialize = function (_input) {
 
 			console.log("initialize evolve");
 
 			self.set(_input);
 
-			now = 1;
-			active = true;
+			now = 0;
 
-		
-			era[index(now)] = new generation({index:now, input:self.input});
-			
+			era.length = 0;
+			era = null;
+			era = [];
+
+			era[0] = new generation({index:1, input:input});
 		}
 
-		self.run = function (_input) {
+		this.run = function (_input) {
 
-			console.log("run evolve module");
+			console.log("run evolve");
 
-			active = true;
-
-			self.set(_input);
-			step();
-
-		}
-
-		self.restart = function (current, _input) {
-
-			console.log("restart evolve");
-
-			if (_input.goal != self.input.goal || _input.pop != self.input.pop) {
+			if (_input.goal != input.goal || _input.pop != input.pop) {
+				console.log("restart evolve");
 				self.initialize(_input);
-			}	
+				self.run(_input);
+			}
 			else {
-				now = current;
+				self.set(_input);
+				self.step();
 			}
-
-			self.run(_input);
-			
-
-		}
-
-		self.hardStop = function (_input) {
-
-			console.log("evolve hard stop", _input, self.input);
-
-			self.set(_input);
-			active = false;
-			if (era[index(now)]) era[index(now)].hardStop();
-
-			if (self.input && self.input.setEvdata) {
-				self.input.setEvdata({
-					index:now,
-					best:previous.best,
-					worst:previous.worst
-				})
-			}
-
 		}
 
 	}
 
 
-	obj.evolve = {
-		module:evolveModule
+	window.evolve = {
+		module:new evolveModule()
 	}
 
 
 
 
-})(obj);
-
-
-try {
-	window.evolve = obj.evolve;
-}
-catch(e) {
-	console.log(e.message);
-}
-
-try {
-	module.exports = obj.evolve;
-}
-catch (e) {
-	console.log(e.message);
-}
-
-
-
-
-
+})(window);
