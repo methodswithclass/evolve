@@ -696,9 +696,9 @@ var obj = {};
 			self.input = _input;
 		}
 
-		self.instruct = function () {
+		self.instruct = function (program) {
 
-			self.input.program.instruct(self.getBest().best.dna);
+			program.instruct(self.getBest().best.dna);
 		}
 
 		self.initialize = function (_input) {
