@@ -516,25 +516,25 @@ var obj = {};
 
 		var getGeneration = function () {
 
-			rank();
+			var ext = rank();
 
 			var thisGen = {};
-			thisGen.pop = [];
+			// thisGen.pop = [];
 			thisGen.index = self.index;
-			thisGen.best = self.best;
-			thisGen.worst = self.worst;
+			thisGen.best = ext.best;
+			thisGen.worst = ext.worst;
 
-			thisGen.pop = [];
+			// thisGen.pop = [];
 
-			for (var i in self.pop) {
+			// for (var i in self.pop) {
 
-				thisGen.pop.push({
-					index:i,
-					dna:self.pop[i].dna,
-					fitness:self.pop[i].fitness,
-					runs:self.pop[i].runs
-				})
-			}
+			// 	thisGen.pop.push({
+			// 		index:i,
+			// 		dna:self.pop[i].dna,
+			// 		fitness:self.pop[i].fitness,
+			// 		runs:self.pop[i].runs
+			// 	})
+			// }
 
 			return thisGen;
 		}
@@ -544,8 +544,6 @@ var obj = {};
 			console.log("turnover", self.index);
 
 			runPop(function () {
-
-				rank();
 
 				var thisGen = getGeneration();
 
@@ -607,6 +605,8 @@ var obj = {};
 			worst:{},
 			pop:[]
 		}
+
+		var previous;
 
 
 		self.input = {};
