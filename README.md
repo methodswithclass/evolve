@@ -2,48 +2,47 @@
 #  Evolutionary Algorithm
 
 
-This repo is an evolutionary algorithm built into a JavaScript module
+This library can optimize your agent's performance by way of an evolutionary algorithm, a model of biological evolution: rank fitness, crossover of best performing, mutation, run next generation.
 
-It contains a module for the Individual, the population (generation), and a module for the main running program called "evolve"
+You provide the environment, or "program" as the property is called, (problem to optimze, machine to teach, etc) and a way to calculate and rank fitness, and this algorithm will handle crossover, mutation, and the automatic generation cycles.
 
-Evolutionary Algorithms can be used to solve complex optimization problems where the parameters do not reveal an obvious path to maximum or minimum solutions
+It can be implemented on the frontend of any JavaScript web application or on the server itself in a NodeJS application, which of course provides much higher performance. This algorithm is highly computationally intensive and will take time to complete the sufficient generations that will give an optimum solution, but the results are worth it.  
 
-This package can be implemented on the frontend or the backend, each in slightly different ways.
-
-To instantiate the Evolve program, create a new object with the following inputs in the following way:
+To implement the algorithm on the frontend, create an object with the following properties and call these functions:
 
 	var input = {
 		name:"description string",
 		gens:100, // total generations
 		runs:20, // runs of scenerio per individual
-		goal:"max", // if algorithm is finding a maximum or minimum
+		goal:"max", // "min" and "max" determine internally if the population is ranked by highest or lowest fitness, depending on the goal of the evolution process
 		pop:100, // total individuals in population
 		evdelay:0, // delay between the completion of one generation and beginning of the next, 0 for no delay 
-		pdata:pdata, // any supporting data for the problem being optimized
+		pdata:pdata, // any supporting data for the problem being optimized, this is passed through to the program that is calculating fitness while the algorithm is running
 		program:program, // the module for the problem being optimized, details below
 		setEvdata:setEvdata, // callback function to set a value to a local variable in your code and do any post processing. This is called after each generation is run, outputs 
 								best and worst individuals 
 		completeEvolve:completeEvolve // callback function to be called when evolution process is stopped either automatically or manually
 	}
 
-	evolve.module.set(input);
+	var evolution = new evolve.module();
 
-	evolve.module.initialize(input);
+	evolution.set(input);
+
+	evolution.initialize(input);
 
 then start the evolution process like this:
 
-	evolve.module.run(input);
-
+	evolution.run(input);
 
 
 You can stop the evolution process by calling:
 
-	evolve.module.hardStop(input);
+	evolution.hardStop(input);
 
 
 Then if you want to restart:
 
-	evolve.module.restart(input); //the total generations to be calculateed can be changed (increased), and the runs per individual, but note that if the goal for the process 
+	evolution.restart(input); //the total generations to be calculateed can be changed (increased), and the runs per individual, but note that if the goal for the process 
 									changes (i.e. max to min), or the size of the population changes, the process will be started from the first generation.
 
 
