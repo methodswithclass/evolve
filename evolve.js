@@ -2,15 +2,10 @@
 
 Evolutionary Algorithm modules, and supporting packages
 
-2017 Christopher Polito v3.0.0
+2017 Christopher Polito v1.0
 
-This library can optimize your agent's performance by way of an evolutionary algorithm, a model of biological evolution: rank fitness, crossover of best performing, mutation, run next generation.
-
-you provide the environment (problem to optimze, machine to teach, etc) and a way to calculate and rank fitness, and this algorithm will handle crossover, mutation, and the automatic generation cycles. You can stop and start the evolution process mid-stream to test the best performer and then continue if you need more generations. 
-
-
-It can be implemented on the frontend of any JavaScript web application or on the server itself in a NodeJS application, which of course provides much higher performance. This algorithm is highly computationally intensive and will take time to complete the sufficient generations that will give an optimum solution, but the results are worth it.  
-
+Implemented in a Frontend Angular web application, the Events and React Modules come in handy with respect to the web
+application but are not related to the evolutionary algorithm, including them simply reduces dependency requirements
 
 */
 
@@ -772,27 +767,17 @@ var obj = {};
 
 		self.run = function (_input) {
 
-			console.log("run evolve module");
-
-			active = true;
-
-			self.set(_input);
-			step();
-
-		}
-
-		self.restart = function (current, _input) {
-
 			console.log("restart evolve");
 
 			if (_input.goal != self.input.goal || _input.pop != self.input.pop) {
 				self.initialize(_input);
-			}	
-			else {
-				now = current;
+				self.run(_input);
 			}
-
-			self.run(_input);
+			else {
+				active = true;
+				this.set(_input);
+				step();
+			}
 			
 
 		}
