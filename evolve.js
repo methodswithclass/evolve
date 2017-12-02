@@ -762,6 +762,8 @@ var obj = {};
 
 		
 			era[index(now)] = new generation({index:now, input:self.input});
+
+			return era.length == self.input.pop;
 			
 		}
 
@@ -770,13 +772,17 @@ var obj = {};
 			console.log("restart evolve");
 
 			if (_input.goal != self.input.goal || _input.pop != self.input.pop) {
-				self.initialize(_input);
-				self.run(_input);
+				console.log("inputs are not equal", _input.pop, self.input.pop, "reinitialize");
+				return false;
 			}
 			else {
+
+
+				console.log("inputs are equal", _input.pop, self.input.pop, "run");
 				active = true;
 				this.set(_input);
 				step();
+				return true;
 			}
 			
 
