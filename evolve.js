@@ -86,9 +86,9 @@ var obj = {};
 
 		// console.log(self.name, "create organism");
 
-		var pdata = params.input.pdata;
+
 		var program = params.input.program;
-		self.total = pdata.genome;
+		self.total = params.input.pdata.data.genome;
 		self.dna = [];
 		self.runs = [];
 		self.fitness = 0;
@@ -103,6 +103,27 @@ var obj = {};
 			run:1
 		}
 
+
+		// reproduction variables
+		var crossoverMethod;
+		var methodTypes;
+		var mutateRate;
+		var dnaChainOffset;
+		var dnaChainLength;
+		// ########
+
+
+		var getCrossoverParams = function (input) {
+
+			methodTypes = input.crossover.methodTypes;
+			crossoverMethod = input.crossover.method;
+			mutateRate = input.crossover.mutate;
+			dnaChainOffset = input.crossover.splicemin;
+			dnaChainLength = input.crossover.splicemax - input.crossover.splicemin;
+		}
+
+
+		getCrossoverParams(input);
 
 
 		if (params && params.dna) {
@@ -119,96 +140,203 @@ var obj = {};
 			}
 		}
 
-		var mutate = function (dna) {
+		var mutate = function ($dna) {
 
 			var i = 0;
 			while (i < self.total) {
-				if (Math.random() < 0.02) {
-					dna[i] = program.gene();
+				if (Math.random() < mutateRate) {
+					$dna[i] = program.gene();
 				}
 				i++;
 			}
 
-			return dna;
+			return $dna;
 
 		}
 
-		var createChild = function (dna, parents) {
 
-			//console.log("create child");
+		var multiParentCrossover = function ($parents) {
 
-			var child = {};
+			/*
 
-			var mIndex = Math.floor(Math.random()*parents.length);
+			########
+			this function is looped from its caller 
 
-			source = parents[mIndex].dna;
+			and delivers individual offspring to its caller
+			########
 
-			if (dna.length < self.total) {
-				dna  = dna.concat(source.slice(dna.length - 1, self.total-1));
-			}
-			else if (dna.length > self.total) {
-				dna.splice(self.total-1, dna.length - self.total);
-			}
+			*/
 
-			if (dna.length == self.total) {
+			var parents = $parents.map(function (value, index) {
 
-				child = new individual({
-					gen:self.generation + 1, 
-					parents:parents, 
-					dna:mutate(dna), 
-					input:input
-				});
-			}
-			else {
-				console.log("wrong length");
+				return value;
+			});
+
+			// console.log("parents", parents.length);
+
+			var getRandomParent = function () {
+
+				return Math.floor(Math.random()*parents.length);
 			}
 
-			return child;
-
-		}
-
-		var crossover = function (parents) {
-
-			//console.log("crossover", parents.length);
-
-			var dna = [];
+			
+			var offspring = [];
+			var $offspring;
 			var mates = [];
+			var dna = [];
+			var mateA;
+			var mateB;
+			var source;
 
-			for (var k = 0; k < parents.length; k++) {
-				dna[k] = [];
-			}
-
-			for (var k = 0; k < parents.length; k++) {
-				mates[k] = k;
-			}
-
-			var c_num = Math.floor(Math.random()*10) + 2;
-			var c_len = Math.floor(self.total/c_num);
+			// creates a dna chain that is between dnaChainOffset and (dnaChainOffset + dnaChainLength) in length
+			var c_len = Math.floor(Math.random()*dnaChainLength) + dnaChainOffset;
+			// the number of chains there will be per dna strand based on how long the chain is
+			var c_num = Math.floor(self.total/c_len);
 			var i = 0;
-			var j = 0;
-			var dna_i = 0;
 
 			while (i < c_num) {
 
-				shuffle(mates);
+				
+				do {
+					mateA = getRandomParent();
+					// console.log("random parent index", mateA);
+				} while (mateA == mateB)
 
-				while (j < c_len) {
+				mateB = mateA;
+				source = parents[mateA];
 
-					dna_i = i*c_len + j;
+				// console.log("source", mateA, parents.length, source ? true : false, parents[mateA] ? true: false);
 
-					for (k in dna) {
-						dna[k][dna_i] = parents[mates[k]].dna[dna_i];
-					}
-
-					j++;
+				if ((i+1)*c_len < self.total) {
+					dna = dna.concat(source.dna.slice(i*c_len, (i+1)*c_len));
+				}
+				else {
+					dna = dna.concat(source.dna.slice(i*c_len));
 				}
 
 				i++;
-				j = 0;
-
 			}
 
-			return dna;
+			$offspring = new individual({
+				gen:self.generation + 1, 
+				parents:parents, 
+				dna:mutate(dna),
+				input:input
+			});
+
+
+			offspring.push($offspring);
+
+			return offspring;
+
+
+		}
+
+		var multiOffspringCrossover = function ($parents) {
+
+
+			/*
+
+			########
+			this function is looped from its caller 
+
+			but also loops internally 
+
+			and delivers multiple offspring to its caller
+			########
+
+			*/
+
+
+			var parents = $parents.map(function (value, index) {
+
+				return value;
+			});
+
+			// console.log("parents", parents.length);
+
+			var getRandomParent = function () {
+
+				return Math.floor(Math.random()*parents.length);
+			}
+
+
+			var mates = [];
+			var dna = [];
+			var mateA;
+			var mateB;
+			var source;
+			var offspring = [];
+
+
+			//offspring loop by parent (offspring.length == parent.length, not including self)
+			do {
+
+
+				//a new splice length is chosen for each offspring loop
+
+				dna = [];
+				// creates a dna chain that is between dnaChainOffset and (dnaChainOffset + dnaChainLength) in length
+				var c_len = Math.floor(Math.random()*dnaChainLength) + dnaChainOffset;
+				// the number of chains there will be per dna strand based on how long the chain is
+				var c_num = Math.floor(self.total/c_len);
+				var i = 0;
+				var j = 1;
+
+
+				//dna splice loop
+				while (i < c_num) {
+
+					// new parent chosen from mates pool, make sure not to choose same two in a row
+					do {
+						mateA = getRandomParent();
+						// console.log("random parent index", mateA);
+					} while (mateA == mateB)
+					mateB = mateA;
+					source = parents[mateA]; // current parent to mate with self
+
+					// console.log("source", mateA, parents.length, source ? true : false, parents[mateA] ? true: false);
+
+
+					// splice procedure
+					if ((i+1)*c_len < self.total && (j+1)*c_len < self.total) {
+						dna = self.dna.slice(i*c_len, (i+1)*c_len).concat(source.dna.slice(j*c_len, (j+1)*c_len));
+					}
+					else {
+						dna = self.dna.slice(i*c_len).concat(source.dna.slice(j*c_len));
+					}
+
+					i++;
+					j++;
+				}
+
+
+				// dna length resolution
+				if (dna.length < self.total) {
+					dna = dna.concat(self.dna.slice(dna.length-1));
+				}
+				else if (dna.length > self.total) {
+					dna.splice(self.total-1, dna.legnth);
+				}
+
+
+				// create new individual from new dna, after mutation, add to array of all offspring
+				$offspring = new individual({
+					gen:self.generation + 1, 
+					parents:[self, source],
+					dna:mutate(dna),
+					input:input
+				});
+
+
+				offspring.push($offspring);
+
+
+			} while (offspring.length < $parents.length) // exit loop when # offspring equals # of parents 
+
+
+		return offspring;
+
 
 		}
 
@@ -219,21 +347,19 @@ var obj = {};
 
 		self.reproduce = function (mates) {
 
-			//console.log(mates)
-
-			mates.push(self);
-
-			//console.log("reproduce", parents);
-
-			var dna = crossover(mates);
-
 			var offspring = [];
 
-			for (var i = 0; i < mates.length; i++) {
-				offspring.push(createChild(dna[i], mates));
-			}
+			if (crossoverMethod == methodTypes.multiParent) {
 
-			//console.log("offspring", offspring.length);
+				mates.push(self);
+
+				offspring = multiParentCrossover(mates);
+
+			}
+			else if (crossoverMethod == methodTypes.multiOffspring) {
+
+				offspring = multiOffspringCrossover(mates);
+			}
 
 			return offspring;
 		}
@@ -303,6 +429,29 @@ var obj = {};
 		var indi;
 		var input = params.input;
 		var task = input.goal;
+
+		// repoduction variables
+		var num_parents;
+		var pool;
+		
+		var popThreshold;
+		var altPool;
+		// ######
+
+
+		var getCrossoverParams = function (input) {
+
+
+			num_parents = input.crossover.parents;
+			pool = input.crossover.pool;
+			
+			popThreshold = 10;
+			altPool = 0.25;
+		}
+
+		getCrossoverParams(input);
+
+
 		self.total = input.pop;
 		self.pop = [];
 		self.index = 1;
@@ -322,6 +471,11 @@ var obj = {};
 				self.index = params.index;
 			}
 			else {
+
+				self.pop.length = 0;
+				self.pop = null;
+				self.pop = [];
+
 				i = 1;
 				while (i <= self.total) {
 					self.pop[i-1] = new individual({gen:self.index, index:i, input:input});
@@ -329,14 +483,8 @@ var obj = {};
 				}
 			}
 
-			// i = 0;
-			// while (i < self.total) {
-			// 	self.pop[i].index = i+1;
-			// 	//self.pop[i].print();
-			// 	i++;
-			// }
 
-			console.log("index", self.index, self.total);
+			// console.log("index", self.index, self.total);
 
 			self.best = {
 				index:self.index,
@@ -355,6 +503,50 @@ var obj = {};
 		}
 		
 		initializePop();
+
+		var runPop = function (complete) {
+
+			indi = 0;
+			var running = true;
+			active = true;
+
+			// console.log("run population");
+
+			runtimer = setInterval(function () {
+
+
+				if (active) {
+
+					if (running) {
+
+						running = false;
+
+						self.pop[indi].setActive();
+
+						self.pop[indi].run(function () {
+
+							indi++;
+
+							if (indi < self.total) {
+								running = true;
+							}
+							else {
+								clearInterval(runtimer);
+								runtimer = {};
+								runtimer = null;
+
+								complete();
+							}
+						});
+
+					}
+				}
+
+			}, 10);
+					
+
+		}
+
 
 		var rank = function () {
 
@@ -391,224 +583,117 @@ var obj = {};
 				worst:self.worst
 			}
 		}
-
-		var runPop = function (complete) {
-
-			indi = 0;
-			var running = true;
-			active = true;
-
-			// console.log("run population");
-
-			runtimer = setInterval(function () {
-
-				if (running) {
-
-					running = false;
-
-					// console.log("self.pop", self.pop, indi);
-
-					if (active) {
-
-						// console.log("run individual", indi);
-
-						self.pop[indi].setActive();
-
-						self.pop[indi].run(function () {
-
-							indi++;
-
-							// console.log("run next individual", indi);
-
-							if (indi < self.total) {
-								running = true;
-							}
-							else {
-								clearInterval(runtimer);
-								runtimer = {};
-								runtimer = null;
-
-								complete();
-							}
-						});
-
-
-					}
-					
-				}
-
-			}, 10);
 			
-		}
-
-		var getIndex = function (factor) {
-			return Math.floor(Math.random()*self.total*factor);
-		}
-
-		var indexExists = function (index, array) {
-
-			for (i in array) {
-
-				if (index == array[i]) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		var getPIndex = function (pIndex, standard) {
-
-			var index;
-
-			do {
-				index = getIndex(standard);
-			} while (indexExists(index, pIndex));
-
-			pIndex.push(index);
-
-			return pIndex;
-
-		}
 
 		var select = function (number, standard) {
 
-			var num_i = number;
 
-			var pIndex = [];
-			var parents = [];
+			var normalStand = standard*self.total/100
 
-			for (var i = 0; i < num_i; i++) {
-				pIndex = getPIndex(pIndex, standard);
-				parents.push(self.pop[last(pIndex)]);
-			}
+			var pool = self.pop.filter(function (value, index) {
 
-			return parents
+				return index < Math.floor(normalStand*self.total);
+			})
+
+
+			var indexes = [];
+			var match;
+
+			do {
+
+				do {
+					
+					index = Math.floor(Math.random()*pool.length);
+
+					match = indexes.find(function(p) {
+
+						return p == index;
+					});
+
+				} while (match >= 0);
+
+				indexes.push(index);
+
+			} while (indexes.length < number);
+
+
+			var parents = indexes.map(function (value, index) {
+
+				return pool[value];
+			})
+
+			parents.sort(function (a, b) {
+
+				return b.fitness - a.fitness;
+			})
+
+			// console.log("select", self.pop.length, pool.length, number, parents.length);
+
+			return parents;
+
 		}
-
-		// var select = function (num_parents) {
-
-		// 	var standard = self.total > 10 ? 0.2 : 0.5;
-
-		// 	var pIndex = [];
-		// 	var parents = [];
-
-		// 	for (var i = 0; i < num_parents; i++) {
-		// 		pIndex = getPIndex(pIndex, standard);
-		// 		parents.push(self.pop[last(pIndex)]);
-		// 	}
-
-		// 	return parents
-		// }
-
-
-
 
 		var reproduce = function (_parents, standard) {
 
 			var parents = [];
 			var mates = [];
 			var children = [];
-			var offspring = [];
-			var num_children = 0;
-			
-			var num_parents = Math.min(_parents, Math.floor(self.total*standard/5));
+			var offspring;
 
-			var i = 0;
-			var more = true;
-			while (more) {
 
-				//console.log("set", i, "size", num_parents);
+			do {
 
-				if (i + num_parents >= self.total) {
-					num_parents = self.total - i;
-					more = false;
+				if (active) {
+
+					parents = select(_parents, standard);
+
+					// console.log("parents", num_parents, standard, parents.length);
+
+					male = parents[0];
+					mates = parents.slice(1);
+
+					offspring = male.reproduce(mates);
+
+					offspring.map(function (value, index) {
+
+						value.index = children.length + index + 1;
+
+					});
+
+					children = children.concat(offspring);
+
 				}
 
-				i = i + num_parents;
+			} while (children.length < self.total)
 
-				parents = select(num_parents, standard);
-
-				male = parents[0];
-				mates = parents.slice(1);
-
-				offspring = male.reproduce(mates);
-
-				offspring.forEach(function (value, index) {
-
-					value.index = num_children + index + 1;
-				})
-
-				children = children.concat(offspring);
-				
-				num_children = children.length;
-
-			}
-
-			console.log("total children", children.length);
+			// console.log("total children", children.length);
 
 			return children;
 		}
 
-		// var reproduce = function (num_parents) {
-
-		// 	var parents = [];
-		// 	var mates = [];
-		// 	var children = [];
-		// 	var offspring = [];
-
-			
-		// 	// var num_parents = Math.min(_parents, Math.floor(self.total*standard/5));
-
-		// 	// var i = 0;
-		// 	// var more = true;
-		// 	while (children.length < self.total) {
-
-		// 		parents = select(num_parents);
-
-		// 		offspring = parents[0].reproduce([parents[1]]);
-		// 		children = children.concat(offspring);
-
-		// 	}
-
-		// 	children = children.slice(0, self.total);
-
-		// 	console.log("total children", children.length);
-
-		// 	return children;
-		// }
-
-		var getGeneration = function () {
-
-			var ext = rank();
-
-			var thisGen = {};
-			thisGen.index = self.index;
-			thisGen.best = ext.best;
-			thisGen.worst = ext.worst;
-
-			return thisGen;
-		}
-
-		self.turnover = function (complete) {
+		self.turnover = function ($input, complete) {
 
 			console.log("turnover", self.index);
 
+			input = $input;
+
+			getCrossoverParams(input);
+
 			runPop(function () {
 
-				var thisGen = getGeneration();
+				var ext = rank();
 
+				var standard = self.total <= popThreshold ? altPool : pool;
 
-				// var num_parents = 2;
-				// var children = reproduce(num_parents);
+				// console.log("number of parents", num_parents, standard);
 
-				var _parents = 2;
-				var standard = self.total > 10 ? 0.2 : 0.5;
-
-				var children = reproduce(_parents, standard);
+				var children = reproduce(num_parents, standard);
 
 				complete({
-					generation:thisGen,
+					previous:{
+						best:ext.best,
+						worst:ext.worst
+					},
 					next:new generation({index:self.index + 1, input:input, pop:children})
 				});
 
@@ -633,7 +718,7 @@ var obj = {};
 			clearInterval(runtimer);
 			runtimer = null;
 			if (self.pop[indi]) self.pop[indi].hardStop();
-			initializePop();
+			//initializePop();
 		}
 		
 	}
@@ -681,11 +766,11 @@ var obj = {};
 
 				stepdataobj.gen = now;
 
-				era[index(now)].turnover(function (x) {
+				era[index(now)].turnover(self.input, function (x) {
 
 					now++;
 
-					previous = x.generation;
+					previous = x.previous;
 					era[index(now)] = x.next;
 
 					// console.log("running evolve", self.input);
@@ -763,7 +848,7 @@ var obj = {};
 		
 			era[index(now)] = new generation({index:now, input:self.input});
 
-			return era.length == self.input.pop;
+			return era[index(now)].length == self.input.pop;
 			
 		}
 

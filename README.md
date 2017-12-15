@@ -16,8 +16,22 @@ To implement the algorithm on the frontend, create an object with the following 
 		runs:20, // runs of scenerio per individual
 		goal:"max", // "min" and "max" determine internally if the population is ranked by highest or lowest fitness, depending on the goal of the evolution process
 		pop:100, // total individuals in population
+		crossover:{ // these values are advanced inputs that change how the algorithm handles reproduction
+			methodTypes:{
+				multiOffspring:"multi-offspring", // the highest performer is paired with the rest of the pool to produce multiple offspring until the population is filled
+				multiParent:"multi-parent" // all the parents contribute their dna to a single offspring until the new population is filled 
+			},
+			method:"multi-parent", // this is the default method
+			parents:2, // the number of parents to choose out of the pool of selected individuals
+			pool:0.1, // the percentage of the population (after descending sort by fitness) to consider as parents to pass their dna on to the next genertion
+			splicemin:2, // the minimum length of the dna strand during the splicing procedure
+			splicemax:12, // the maximum length of the dna strand during the splicing procedure
+				//(The min and max of the dna strand affects how much unchanged parent dna or mixing ends up in the child, which can affect efficiency. 
+					These values are bounds on a random operator.)
+			mutate:0.02 // the percentage of dna that are randomly changed (mutated) before the next generation is run. this value is the critical hinge upon which this whole process depends
+		},
+		programInput:programInput, // this is a general object to attach any data you see fit that may assist in running your program, it can be used in any manner you wish
 		evdelay:0, // delay between the completion of one generation and beginning of the next, 0 for no delay 
-		pdata:pdata, // any supporting data for the problem being optimized, this is passed through to the program that is calculating fitness while the algorithm is running
 		program:program, // the module for the problem being optimized, details below
 		setEvdata:setEvdata, // callback function to set a value to a local variable in your code and do any post processing. This is called after each generation is run, outputs 
 								best and worst individuals 
@@ -40,24 +54,22 @@ You can stop the evolution process by calling:
 	evolution.hardStop(input);
 
 
-Then if you want to restart:
+Then if you want to restart simply call the run function again with input.gens greater than the current value:
 
-	evolution.restart(input); //the total generations to be calculateed can be changed (increased), and the runs per individual, but note that if the goal for the process 
-									changes (i.e. max to min), or the size of the population changes, the process will be started from the first generation.
+	evolution.run(input); //the total generations to be calculateed needs to be increased,
+							// note that if the goal for the process changes, or the size of the population changes,
+							// the process will have to be re-initialized and start from the first generation
 
 
-The accompanying program that represents the problem being optimized must adhere to the following API:
+The program you write that represents the problem being optimized must adhere to the following API:
 
-It must expose the following public functions, each will be called at some point in the evolutionary algorithm process:
+
+It must expose the following public functions, each will be called at some point in the evolutionary algorithm process by the evolve package:
 
 	{
 		run:run, // this function will be called to run the evolution process, it may invoke further processes in whatever way it requires to calculate fitness for the individual
-		instruct:instruct, // this function will be called to set the plan being tested for fitness, or when running a simulation of a final result 
-		stepdata:stepdata, // this function can be used to return realtime data of evolution process, a global object can be set by the run process which is then returned by this 
-								function in intervals by your main software 
 		gene:gene, // this generates and returns a single new gene, an individual piece of dna
-		hardStop:hardStop, // this is called to stop the process immediately
-		reset:reset // this is called to reset the program to it's original state
+		hardStop:hardStop, // this is called to stop immediately any processes running that were started by calling the run function
 	} 
 
 
