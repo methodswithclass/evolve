@@ -595,6 +595,11 @@ var obj = {};
 				return index < Math.floor(normalStand*self.total);
 			})
 
+			if (!pool) {
+
+				return;
+			}
+
 
 			var indexes = [];
 			var match;
@@ -647,6 +652,11 @@ var obj = {};
 
 					parents = select(_parents, standard);
 
+					if (parents.length == 0) {
+
+						break;
+					}
+
 					// console.log("parents", num_parents, standard, parents.length);
 
 					male = parents[0];
@@ -665,6 +675,11 @@ var obj = {};
 				}
 
 			} while (children.length < self.total)
+
+			if (children.length == 0) {
+
+				return;
+			}
 
 			// console.log("total children", children.length);
 
@@ -688,6 +703,17 @@ var obj = {};
 				// console.log("number of parents", num_parents, standard);
 
 				var children = reproduce(num_parents, standard);
+
+				if (children.length == 0) {
+
+					complete({
+						previous:{
+							best:ext.best,
+							worst:ext.worst
+						},
+						next:null
+					})
+				}
 
 				complete({
 					previous:{
@@ -771,28 +797,36 @@ var obj = {};
 					now++;
 
 					previous = x.previous;
-					era[index(now)] = x.next;
+						
+					if (x.next) {
+						era[index(now)] = x.next;
+					
+						// console.log("running evolve", self.input);
 
-					// console.log("running evolve", self.input);
+						if (self.input && self.input.setEvdata) {
+							self.input.setEvdata({
+								index:now,
+								best:previous.best,
+								worst:previous.worst
+							})
+						}
 
-					if (self.input && self.input.setEvdata) {
-						self.input.setEvdata({
-							index:now,
-							best:previous.best,
-							worst:previous.worst
-						})
-					}
+						if (now <= self.input.gens) {
+							setTimeout(function () {
+								step();
+							}, self.input.evdelay);
+						}
+						else {
 
-					if (now <= self.input.gens) {
-						setTimeout(function () {
-							step();
-						}, self.input.evdelay);
+							if (self.input && self.input.completeEvolve) {
+								self.input.completeEvolve();
+							}
+						}
+
 					}
 					else {
 
-						if (self.input && self.input.completeEvolve) {
-							self.input.completeEvolve();
-						}
+						self.hardStop(self.input);
 					}
 
 				});
