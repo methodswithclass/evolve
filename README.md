@@ -16,26 +16,18 @@ To implement the algorithm on the frontend, create an object with the following 
 		runs:20, // runs of scenerio per individual
 		goal:"max", // "min" and "max" determine internally if the population is ranked by highest or lowest fitness, depending on the goal of the evolution process
 		pop:100, // total individuals in population
-		crossover:{ // these values are advanced inputs that change how the algorithm handles reproduction
-			methodTypes:{
-				multiOffspring:"multi-offspring", // the highest performer is paired with the rest of the pool to produce multiple offspring until the population is filled
-				multiParent:"multi-parent" // all the parents contribute their dna to a single offspring until the new population is filled 
-			},
-			method:"multi-parent", // this is the default method
-			parents:2, // the number of parents to choose out of the pool of selected individuals
-			pool:0.1, // the percentage of the population (after descending sort by fitness) to consider as parents to pass their dna on to the next genertion
-			splicemin:2, // the minimum length of the dna strand during the splicing procedure
-			splicemax:12, // the maximum length of the dna strand during the splicing procedure
-				//(The min and max of the dna strand affects how much unchanged parent dna or mixing ends up in the child, which can affect efficiency. 
-					These values are bounds on a random operator.)
-			mutate:0.02 // the percentage of dna that are randomly changed (mutated) before the next generation is run. this value is the critical hinge upon which this whole process depends
-		},
-		programInput:programInput, // this is a general object to attach any data you see fit that may assist in running your program, it can be used in any manner you wish
+		runProcess:"async", // whether the loop that runs each individual in the generation is syncronous or asyncronous
+		method:"multi-parent", // the crossover method, many parents creating one offspring, or two parents creating many offspring
+		parents:2, // the number of parents to choose out of the pool of selected individuals
+		pool:0.1, // the top percentage by fitness of the population to consider as parents for the next generation
+		splicemin:2, // the minimum length of the dna strand during the splicing procedure
+		splicemax:12, // the maximum length of the dna strand during the splicing procedure
+		mutate:0.02 // the percentage of dna that are randomly changed (mutated) before the next generation is run. 
+					// this value is the critical hinge upon which this whole process depends
+		programInput:programInput, // this is a generic object to attach any data you see fit for your program that may assist in running your program, 
+									// it can be used in any manner you wish
 		evdelay:0, // delay between the completion of one generation and beginning of the next, 0 for no delay 
 		program:program, // the module for the problem being optimized, details below
-		setEvdata:setEvdata, // callback function to set a value to a local variable in your code and do any post processing. This is called after each generation is run, outputs 
-								best and worst individuals 
-		completeEvolve:completeEvolve // callback function to be called when evolution process is stopped either automatically or manually
 	}
 
 	var evolution = new evolve.module();
@@ -79,9 +71,9 @@ There are a few caveates about the input object for the this package. The progra
 There are other things to consider for a backend implementation, if there any questions, please don't hesitate to send me an email. When I have the time, I plan on expounding on the wiki and an robust api reference.
 
 
-chris@mwithc.io
+chris@mwclass.io
 
 
 
-Visit https://evolve.methodswithclass.com to see how this package can be applied to various problems like machine learning and image recognition. 
+My working example of this algorithm put to extensive use can be found at https://evolve.methodswithclass.com. It is applied to various problems like machine learning and image recognition. 
 
