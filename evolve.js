@@ -2,7 +2,7 @@
 
 Evolutionary Algorithm modules, and supporting packages
 
-2018 Christopher Polito v5.0.0
+2018 Christopher Polito v5.1.1
 
 Implemented in a Frontend Angular web application, the Events and React Modules come in handy with respect to the web
 application but are not related to the evolutionary algorithm, including them simply reduces dependency requirements
@@ -352,9 +352,9 @@ var obj = {};
 
 		}
 
-		self.setActive = function () {
+		self.setActive = function ($active) {
 
-			active = true;
+			active = $active;
 		}
 
 
@@ -536,7 +536,7 @@ var obj = {};
 
 		self.run = function (complete) {
 
-			// console.log("run org", self.index);
+			// console.log("run org", self.index, active);
 
 			if (active) {
 
@@ -564,7 +564,7 @@ var obj = {};
 
 			// console.log("individual hard stop", self.index);
 
-			active = false;
+			self.setActive(false);
 			self.runs = [];
 			program.hardStop();
 		}
@@ -707,9 +707,10 @@ var obj = {};
 
 				return new Promise(function (resolve, reject) {
 
-					// console.log("run indi", i);
+					// console.log("run indi", i, self.pop.length);
 					self.pop[i].run(function () {
 
+						// console.log("resolve", i);
 						resolve(i);
 					})
 
@@ -717,13 +718,15 @@ var obj = {};
 			}
 
 
-			active = true;
+			self.setActive(true);
 
 			var i = 0;
 
 			var finished = [];
 
 			while (i < self.total) {
+
+				// console.log("indi", i, active);
 
 				if (active) {
 
@@ -1047,6 +1050,16 @@ var obj = {};
 
 		}
 
+		this.setActive = function ($active) {
+
+			active = $active;
+
+			self.pop.forEach((p) => {
+
+				p.setActive($active);
+			})
+		}
+
 		this.getstepdata = function (stepdata) {
 
 			stepdata.org = indi;
@@ -1060,7 +1073,7 @@ var obj = {};
 
 			// console.log("generation hard stop", indi);
 
-			active = false;
+			self.setActive(false);
 			clearInterval(runtimer);
 			runtimer = null;
 			self.pop.forEach((p) => {
@@ -1083,7 +1096,7 @@ var obj = {};
 		
 		var stepdataobj = {
 			name:"",
-			gen:now + 1,
+			gen:now,
 			org:1,
 			run:1
 		}
@@ -1108,6 +1121,13 @@ var obj = {};
 		var index = function ($now) {
 
 			return $now - 1;
+		}
+
+		var setActive = function ($active) {
+
+			active = $active;
+			if (current.setActive) current.setActive($active);
+			if (previous.setActive) previous.setActive($active);
 		}
 		
 		var step = function () {
@@ -1166,7 +1186,7 @@ var obj = {};
 
 		self.running = function () {
 
-			return active && (now < self.input.gens);
+			return active && (now <= self.input.gens);
 		}
 
 		self.getBest = function () {
@@ -1193,26 +1213,19 @@ var obj = {};
 
 		self.initialize = function (_input) {
 
+			console.log(" ");
 			console.log("initialize evolve");
 
 			self.set(_input);
-
-			// era = null;
-			// era = [];
 			now = 1;
-			active = true;
-
-		
-			// era[index(now)] = new generation({index:now, input:self.input});
 			current = new generation({index:now, input:self.input});
-
-			// return era[index(now)].length == self.input.pop;
+			setActive(true);
 			return now == self.input.pop;
-			
 		}
 
 		self.run = function (_input) {
 
+			console.log(" ");
 			console.log("restart evolve");
 
 			if (_input.goal != self.input.goal || _input.pop != self.input.pop) {
@@ -1223,7 +1236,7 @@ var obj = {};
 
 
 				console.log("inputs are equal", _input.pop, self.input.pop, "run");
-				active = true;
+				setActive(true);
 				this.set(_input);
 				step();
 				return true;
@@ -1234,20 +1247,13 @@ var obj = {};
 
 		self.hardStop = function (_input) {
 
-			console.log("evolve hard stop", self.input.gen);
+			console.log("evolve hard stop", self.input.gens);
 
 			self.set(_input);
-			active = false;
-			// era.forEach((p) => {
-
-			// 	p.hardStop();
-			// })
-
+			setActive(false);
 
 			current.hardStop();
-
 			previous.hardStop();
-			
 
 			if (self.input && self.input.setEvdata) {
 				self.input.setEvdata({
