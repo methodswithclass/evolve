@@ -2,7 +2,7 @@
 
 Evolutionary Algorithm modules, and supporting packages
 
-2018 Christopher Polito v5.0.1
+2017 Christopher Polito v1.0
 
 Implemented in a Frontend Angular web application, the Events and React Modules come in handy with respect to the web
 application but are not related to the evolutionary algorithm, including them simply reduces dependency requirements
@@ -94,7 +94,6 @@ var obj = {};
 		self.fitness = 0;
 		self.generation = params.gen;
 		self.index = params.index;
-		self.currentGen = params.curentGen;
 		self.parents = [];
 		var input = params.input;
 		var stepdataobj = {
@@ -352,13 +351,31 @@ var obj = {};
 
 		}
 
-		self.setActive = function ($active) {
+		self.setActive = function () {
 
-			active = $active;
+			active = true;
 		}
 
+		self.reproduce = function (mates) {
 
-		self.reproduce = function (parents) {
+			var offspring = [];
+
+			if (crossoverMethod == methodTypes.multiParent) {
+
+				mates.push(self);
+
+				offspring = multiParentCrossover(mates);
+
+			}
+			else if (crossoverMethod == methodTypes.multiOffspring) {
+
+				offspring = multiOffspringCrossover(mates);
+			}
+
+			return offspring;
+		}
+
+		self.reproduceAsync = function (parents) {
 
 
 			parents.push(self);
@@ -536,7 +553,7 @@ var obj = {};
 
 		self.run = function (complete) {
 
-			// console.log("run org", self.index, active);
+			// console.log("run org", self.index);
 
 			if (active) {
 
@@ -562,9 +579,9 @@ var obj = {};
 
 		self.hardStop = function () {
 
-			// console.log("individual hard stop", self.index);
+			console.log("individual hard stop", self.index);
 
-			self.setActive(false);
+			active = false;
 			self.runs = [];
 			program.hardStop();
 		}
@@ -671,7 +688,7 @@ var obj = {};
 
 				i = 1;
 				while (i <= self.total) {
-					self.pop.push(new individual({gen:self.index, index:i, input:input}));
+					self.pop[i-1] = new individual({gen:self.index, index:i, input:input});
 					i++;
 				}
 			}
@@ -697,8 +714,51 @@ var obj = {};
 		
 		initializePop();
 
-
 		var runPop = function (complete) {
+
+			indi = 0;
+			var running = true;
+			active = true;
+
+			// console.log("run population");
+
+			runtimer = setInterval(function () {
+
+
+				if (active) {
+
+					if (running) {
+
+						running = false;
+
+						self.pop[indi].setActive();
+
+						self.pop[indi].run(function () {
+
+							indi++;
+
+							if (indi < self.total) {
+								running = true;
+							}
+							else {
+								clearInterval(runtimer);
+								runtimer = {};
+								runtimer = null;
+
+								complete();
+							}
+						});
+
+					}
+				}
+
+			}, 10);
+					
+
+		}
+
+
+		var runPopAsync = function (complete) {
 
 
 			var runIndi = function (i) {
@@ -707,26 +767,21 @@ var obj = {};
 
 				return new Promise(function (resolve, reject) {
 
-					// console.log("run indi", i, self.pop.length);
-					self.pop[i].run(function () {
+					// console.log("run indi", i);
+					self.pop[i].run()
 
-						// console.log("resolve", i);
-						resolve(i);
-					})
-
+					return resolve(i);		
 				})
 			}
 
 
-			self.setActive(true);
+			active = true;
 
 			var i = 0;
 
 			var finished = [];
 
 			while (i < self.total) {
-
-				// console.log("indi", i, active);
 
 				if (active) {
 
@@ -735,11 +790,7 @@ var obj = {};
 
 						finished.push(i);
 
-						// console.log("completed indi", finished.length, self.pop.length);
-
 						if (finished.length == self.pop.length) {
-
-							// console.log("run complete for generation", self.index);
 
 							complete();
 						}
@@ -797,8 +848,7 @@ var obj = {};
 				worst:self.worst
 			}
 		}
-
-
+			
 
 		var select = function (number, _pool) {
 
@@ -821,22 +871,67 @@ var obj = {};
 			var index;
 
 
-			do {
+			var getIndexAsync = function () {
 
-				do {
-					
+				return new Promise(function (resolve, reject) {
+
 					index = Math.floor(Math.random()*$pool.length);
+
 
 					match = indexes.find(function(p) {
 
 						return p == index;
 					});
 
-				} while (match >= 0);
+					console.log("match", index, indexes, match, typeof match == "undefined", match == undefined, match === undefined);
 
-				indexes.push(index);
+					if (match === undefined) {
 
-			} while (indexes.length < number);
+						return resolve(index);
+					}
+
+				})
+			}
+
+
+			if (selectAsync) {
+
+				while (indexes.length <= number) {
+					
+					getIndexAsync()
+					.then(function (index) {
+
+						indexes.push(index);
+
+					})
+					.catch(function (err) {
+
+						console.log("Error in promise:", err);
+					})
+
+				}
+
+			}
+			else {
+
+				do {
+
+					do {
+						
+						index = Math.floor(Math.random()*$pool.length);
+
+						match = indexes.find(function(p) {
+
+							return p == index;
+						});
+
+					} while (match >= 0);
+
+					indexes.push(index);
+
+				} while (indexes.length < number);
+
+			}
 
 
 			var parents = indexes.map(function (value, index) {
@@ -854,89 +949,6 @@ var obj = {};
 			return parents;
 
 		}
-			
-
-		// var select = function (number, _pool) {
-
-
-		// 	// var normalStand = _pool*self.total/100
-
-		// 	var $pool = self.pop.filter(function (value, index) {
-
-		// 		return index < Math.floor(_pool*self.total);
-		// 	})
-
-		// 	if (!$pool) {
-
-		// 		return;
-		// 	}
-
-
-		// 	var indexes = [];
-		// 	var match;
-		// 	var index;
-
-
-		// 	var getIndexAsync = function ($indexes) {
-
-		// 		return new Promise(function (resolve, reject) {
-
-		// 			index = Math.floor(Math.random()*$pool.length);
-
-
-		// 			match = $indexes.find(function(p) {
-
-		// 				return p == index;
-		// 			});
-
-		// 			// console.log("match", index, $indexes, match, typeof match === "undefined");
-
-		// 			if (typeof match === "undefined") {
-
-		// 				return resolve(index);
-		// 			}
-
-		// 		})
-		// 	}
-
-
-
-		// 	while (indexes.length <= number) {
-				
-		// 		getIndexAsync(indexes)
-		// 		.then(function (index) {
-
-		// 			console.log("index", index);
-
-		// 			indexes.push(index);
-
-		// 			console.log("index is", index, indexes);
-
-		// 		})
-		// 		.catch(function (err) {
-
-		// 			console.log("Error in promise:", err);
-		// 		})
-
-		// 	}
-
-			
-
-		// 	var parents = indexes.map(function (value, index) {
-
-		// 		return $pool[value];
-		// 	})
-
-		// 	parents.sort(function (a, b) {
-
-		// 		return b.fitness - a.fitness;
-		// 	})
-
-		// 	// console.log("select", self.pop.length, pool.length, number, parents.length);
-
-		// 	return parents;
-
-		// }
 
 		var reproduce = function (_parents, _pool) {
 
@@ -947,29 +959,93 @@ var obj = {};
 
 			var i = 0;
 
-			// console.log("reproduce", _parents, _pool, active);
+			// console.log("reproduce", _parents, standard);
 
-			if (active) {
+			if (reproductionType == reproductionTypes.async) {
 
-				while (i < self.total) {
+				if (active) {
+
+					while (i < self.total) {
 
 
-					parents = select(_parents, _pool);
+						parents = select(_parents, _pool);
 
-					if (parents.length == 0) {
+						if (parents.length == 0) {
 
-						break;
+							break;
+						}
+
+						// console.log("parents", num_parents, standard, parents.length, parents);
+
+						male = parents[0];
+						mates = parents.slice(1);
+
+						// console.log("male", male);
+
+						childrenPromise = male.reproduceAsync(mates)
+						.then(function (offspring) {
+
+
+							offspring.map(function (value, index) {
+
+								value.index = children.length + index + 1;
+
+							});
+
+							children = children.concat(offspring);
+
+							// console.log("children", children.length);
+
+							return children.length;
+
+						})
+						.then(function (j) {
+
+							if (j == self.total) {
+
+								return children
+							}
+						})
+						.catch(function (err) {
+
+							console.log("Error in promise:", err);
+						})
+
+						// console.log("after then");
+
+						i++;
+
 					}
 
-					// console.log("parents", num_parents, _pool, parents.length, parents);
 
-					male = parents[0];
-					mates = parents.slice(1);
+					return childrenPromise;
 
-					// console.log("male", male);
 
-					childrenPromise = male.reproduce(mates)
-					.then(function (offspring) {
+				}
+
+
+			}
+			else if (reproductionType == reproductionTypes.sync) {
+
+
+				if (active) {
+
+					do {
+
+
+						parents = select(_parents, _pool);
+
+						if (parents.length == 0) {
+
+							break;
+						}
+
+						// console.log("parents", num_parents, standard, parents.length);
+
+						male = parents[0];
+						mates = parents.slice(1);
+
+						offspring = male.reproduce(mates);
 
 
 						offspring.map(function (value, index) {
@@ -980,32 +1056,17 @@ var obj = {};
 
 						children = children.concat(offspring);
 
-						// console.log("children", children.length);
-
-						return children.length;
-
-					})
-					.then(function (j) {
-
-						if (j == self.total) {
-
-							return children
-						}
-					})
-					.catch(function (err) {
-
-						console.log("Error in promise:", err);
-					})
-
-					// console.log("after then");
-
-					i++;
-
-				}
+					} while (children.length < self.total)
 
 
-				return childrenPromise;
+					if (children.length == 0) {
 
+						return;
+					}
+
+					return children;
+
+				} 
 
 			}
 
@@ -1020,44 +1081,78 @@ var obj = {};
 
 			getCrossoverParams(input);
 
+			var runPopComplete = function () {
 
-			runPop(function () {
+				// console.log("run pop complete");
 
 				var ext = rank();
 
+				console.log("best", ext.best.fitness);
+
+				var onComplete = function ($children) {
 
 
-				reproduce(num_parents, pool)
-				.then(function ($children) {
+					if ($children.length == 0) {
+
+						complete({
+							previous:{
+								best:ext.best,
+								worst:ext.worst
+							},
+							next:null
+						})
+					}
 
 					complete({
-						rank:{
+						previous:{
 							best:ext.best,
 							worst:ext.worst
 						},
-						previous:self,
-						next:($children.length == 0 ? self : (new generation({index:self.index + 1, input:input, pop:$children})))
+						next:new generation({index:self.index + 1, input:input, pop:$children})
 					});
-					
-				})
-				.catch(function (err) {
 
-					console.log("Error in promise:", err);
-				})
+				}
 
 
-			});
+				if (reproductionType == reproductionTypes.async) {
 
-		}
+					reproduce(num_parents, pool)
+					.then(function ($children) {
 
-		this.setActive = function ($active) {
+						onComplete($children);
+						
+					})
+					.catch(function (err) {
 
-			active = $active;
+						console.log("Error in promise:", err);
+					})
 
-			self.pop.forEach((p) => {
+				}
+				else if (reproductionType == reproductionTypes.sync) {
 
-				p.setActive($active);
-			})
+					var $children = reproduce(num_parents, pool);
+
+					onComplete($children);
+
+				}
+
+
+			}
+
+
+
+			if (type == types.sync) {
+
+				runPop(runPopComplete);
+
+			}
+			else if (type == types.async) {
+
+				runPopAsync(runPopComplete);
+
+			}
+
+
 		}
 
 		this.getstepdata = function (stepdata) {
@@ -1071,15 +1166,13 @@ var obj = {};
 
 		this.hardStop = function () {
 
-			// console.log("generation hard stop", indi);
+			console.log("generation hard stop", indi);
 
-			self.setActive(false);
+			active = false;
 			clearInterval(runtimer);
 			runtimer = null;
-			self.pop.forEach((p) => {
-
-				p.hardStop();
-			})
+			if (self.pop[indi]) self.pop[indi].hardStop();
+			//initializePop();
 		}
 		
 	}
@@ -1090,13 +1183,13 @@ var obj = {};
 		var self = this;
 
 
-		// var era = [];
+		var era = [];
 		var now = 1;
 		var active = true;
 		
 		var stepdataobj = {
 			name:"",
-			gen:now,
+			gen:now + 1,
 			org:1,
 			run:1
 		}
@@ -1108,12 +1201,7 @@ var obj = {};
 			pop:[]
 		}
 
-		var rank;
 		var previous;
-		var current;
-
-		var check = 0;
-		var called = 0;
 
 
 		self.input = {};
@@ -1121,13 +1209,6 @@ var obj = {};
 		var index = function ($now) {
 
 			return $now - 1;
-		}
-
-		var setActive = function ($active) {
-
-			active = $active;
-			if (current.setActive) current.setActive($active);
-			if (previous.setActive) previous.setActive($active);
 		}
 		
 		var step = function () {
@@ -1139,22 +1220,20 @@ var obj = {};
 
 				stepdataobj.gen = now;
 
-				current.turnover(self.input, function (x) {
+				era[index(now)].turnover(self.input, function (x) {
 
 					now++;
 
-					rank = x.rank;
 					previous = x.previous;
 
-					console.log("best", rank.best.fitness);
+					// console.log("best", previous.best.fitness);
 						
 					if (x.next) {
-						// era[index(now)] = x.next;
-						current = x.next;
+						era[index(now)] = x.next;
 					
 						// console.log("running evolve", self.input);
 
-						if (now <= self.input.gens && !rank.best.success) {
+						if (now <= self.input.gens && !previous.best.success) {
 							setTimeout(function () {
 								step();
 							}, self.input.programInput.evdelay);
@@ -1177,16 +1256,14 @@ var obj = {};
 
 		self.getstepdata = function () {
 
-			// stepdataobj = era[index(now)].getstepdata(stepdataobj);
-
-			stepdataobj = (typeof currrent !== "undefined") ? current.getstepdata(stepdataobj) : stepdataobj;
+			stepdataobj = era[index(now)].getstepdata(stepdataobj);
 
 			return stepdataobj;
 		}
 
 		self.running = function () {
 
-			return active && (now <= self.input.gens);
+			return active && (now < self.input.gens);
 		}
 
 		self.getBest = function () {
@@ -1194,14 +1271,14 @@ var obj = {};
 			return {
 				index:self.index,
 				best:{
-					dna:rank.best.dna,
-					runs:rank.best.runs,
-					fitness:rank.best.fitness
+					dna:previous.best.dna,
+					runs:previous.best.runs,
+					fitness:previous.best.fitness
 				},
 				worst:{
-					dna:rank.worst.dna,
-					runs:rank.worst.runs,
-					fitness:rank.worst.fitness
+					dna:previous.best.dna,
+					runs:previous.worst.runs,
+					fitness:previous.worst.fitness
 				}
 			};
 		}
@@ -1213,19 +1290,24 @@ var obj = {};
 
 		self.initialize = function (_input) {
 
-			console.log(" ");
 			console.log("initialize evolve");
 
 			self.set(_input);
+
+			era = null;
+			era = [];
 			now = 1;
-			current = new generation({index:now, input:self.input});
-			setActive(true);
-			return now == self.input.pop;
+			active = true;
+
+		
+			era[index(now)] = new generation({index:now, input:self.input});
+
+			return era[index(now)].length == self.input.pop;
+			
 		}
 
 		self.run = function (_input) {
 
-			console.log(" ");
 			console.log("restart evolve");
 
 			if (_input.goal != self.input.goal || _input.pop != self.input.pop) {
@@ -1236,7 +1318,7 @@ var obj = {};
 
 
 				console.log("inputs are equal", _input.pop, self.input.pop, "run");
-				setActive(true);
+				active = true;
 				this.set(_input);
 				step();
 				return true;
@@ -1247,19 +1329,17 @@ var obj = {};
 
 		self.hardStop = function (_input) {
 
-			console.log("evolve hard stop", self.input.gens);
+			console.log("evolve hard stop", _input, self.input);
 
 			self.set(_input);
-			setActive(false);
-
-			current.hardStop();
-			previous.hardStop();
+			active = false;
+			if (era[index(now)]) era[index(now)].hardStop();
 
 			if (self.input && self.input.setEvdata) {
 				self.input.setEvdata({
 					index:now,
-					best:rank.best,
-					worst:rank.worst
+					best:previous.best,
+					worst:previous.worst
 				})
 			}
 
