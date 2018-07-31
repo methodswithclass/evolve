@@ -1192,7 +1192,7 @@ var obj = {};
 		self.getBest = function () {
 
 			return {
-				index:self.index,
+				index:now,
 				best:{
 					dna:rank.best.dna,
 					runs:rank.best.runs,
