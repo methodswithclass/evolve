@@ -1279,8 +1279,8 @@ var obj = {};
 			self.set(_input);
 			setActive(false);
 
-			current.hardStop();
-			previous.hardStop();
+			if (current && current.hardStop) current.hardStop();
+			if (previous && previous.hardStop) previous.hardStop();
 
 			if (self.input && self.input.setEvdata) {
 				self.input.setEvdata({
