@@ -1191,18 +1191,44 @@ var obj = {};
 
 		self.getBest = function () {
 
+			var best;
+
+			var default = {
+				dna:[],
+				runs:0,
+				fitness:0
+			}
+
+			if (rank) {
+				
+				if (rank.best)
+					best = {
+						dna:rank.best.dna,
+						runs:rank.best.runs,
+						fitness:rank.best.fitness
+					}
+				}
+				else {
+					best = default;
+				}
+
+				if (rank.worst) {
+					worst = {
+						dna:rank.wort.dna,
+						runs:rank.worst.runs,
+						fitness:rank.worst.fitness
+					}
+				}
+				else {
+					worst = default;
+				}
+
+			}
+
 			return {
 				index:now,
-				best:{
-					dna:rank.best.dna,
-					runs:rank.best.runs,
-					fitness:rank.best.fitness
-				},
-				worst:{
-					dna:rank.worst.dna,
-					runs:rank.worst.runs,
-					fitness:rank.worst.fitness
-				}
+				best:best,
+				worst:worst
 			};
 		}
 
