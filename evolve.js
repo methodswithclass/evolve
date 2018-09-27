@@ -1192,8 +1192,9 @@ var obj = {};
 		self.getBest = function () {
 
 			var best;
+			var worst;
 
-			var default = {
+			var defaultVal = {
 				dna:[],
 				runs:0,
 				fitness:0
@@ -1201,7 +1202,7 @@ var obj = {};
 
 			if (rank) {
 				
-				if (rank.best)
+				if (rank.best) {
 					best = {
 						dna:rank.best.dna,
 						runs:rank.best.runs,
@@ -1209,7 +1210,7 @@ var obj = {};
 					}
 				}
 				else {
-					best = default;
+					best = defaultVal;
 				}
 
 				if (rank.worst) {
@@ -1220,7 +1221,7 @@ var obj = {};
 					}
 				}
 				else {
-					worst = default;
+					worst = defaultVal;
 				}
 
 			}
