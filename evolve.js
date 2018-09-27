@@ -1215,7 +1215,7 @@ var obj = {};
 
 				if (rank.worst) {
 					worst = {
-						dna:rank.wort.dna,
+						dna:rank.worst.dna,
 						runs:rank.worst.runs,
 						fitness:rank.worst.fitness
 					}
