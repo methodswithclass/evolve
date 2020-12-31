@@ -1,6 +1,6 @@
 {
   "name": "@methodswithclass/evolve",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An Evolutionary Algorithm in JavaScript that takes in a generic module that represents a problem to be optimized",
   "main": "evolve.js",
   "scripts": {
