@@ -1,39 +1,26 @@
 {
   "name": "@methodswithclass/evolve",
   "version": "1.0.1",
-  "description": "An Evolutionary Algorithm in JavaScript that takes in a generic module that represents a problem to be optimized",
-  "main": "evolve.js",
+  "description": "This library can optimize your agent's performance by way of an evolutionary algorithm, a model of biological evolution: rank fitness, crossover of best performing, mutation, run next generation.",
+  "main": "dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/methodswithclass/evolve.git"
   },
-  "keywords": [
-    "evolutionary-algorithm",
-    "genetic-algorithm",
-    "evolution",
-    "evolutionary",
-    "genetic",
-    "gene",
-    "mutation",
-    "generation",
-    "population",
-    "individual",
-    "crossover",
-    "optimization",
-    "minimum",
-    "maximum",
-    "solution",
-    "problem-solving",
-    "image-recognition",
-    "machine-learning"
-  ],
-  "author": "Christopher Polito <chris@mwithc.io>",
+  "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/methodswithclass/evolve/issues"
   },
-  "homepage": "https://github.com/methodswithclass/evolve#readme"
+  "homepage": "https://github.com/methodswithclass/evolve#readme",
+  "devDependencies": {
+    "ts-loader": "^9.3.0",
+    "typescript": "^4.7.3",
+    "webpack": "^5.73.0",
+    "webpack-cli": "^4.9.2"
+  }
 }
