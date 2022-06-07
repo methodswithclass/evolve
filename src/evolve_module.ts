@@ -37,7 +37,7 @@ class Evolve {
 
   private step = () => {
     console.log(' ');
-    console.log('evolve new', this.now);
+    console.log('evolve', this.now);
 
     if (this.active) {
       this.stepdataobj.gen = this.now;
@@ -159,7 +159,7 @@ class Evolve {
   };
 
   hardStop = (input: any) => {
-    console.log('evolve hard stop new', this.input.gens);
+    console.log('evolve hard stop', this.input.gens);
 
     this.set(input);
     this.setActive(false);
