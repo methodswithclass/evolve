@@ -1,10 +1,10 @@
 const path = require('path');
 
-module.exports = {
+const getConfig = (file) => ({
   mode: 'production',
   entry: './src/index.js',
   output: {
-    filename: 'main.js',
+    filename: file,
     path: path.resolve(__dirname, 'dist'),
     library: {
       type: 'umd',
@@ -18,10 +18,19 @@ module.exports = {
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-        },
       },
     ],
   },
+});
+
+const client = {
+  ...getConfig('main.browser.js'),
+  target: 'web',
 };
+
+const server = {
+  ...getConfig('main.js'),
+  target: 'node',
+};
+
+module.exports = [client, server];
