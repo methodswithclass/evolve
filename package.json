@@ -1,6 +1,6 @@
 {
   "name": "@methodswithclass/evolve",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "description": "This library optimizes your agent's performance by way of an evolutionary algorithm, a model of biological evolution: rank fitness, crossover of best performing, mutation, run next generation.",
   "main": "dist/main.js",
   "files": [
