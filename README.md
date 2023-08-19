@@ -1,79 +1,225 @@
+# Evolutionary Algorithm
 
-#  Evolutionary Algorithm
+This library optimizes a strategy to solve a problem by way of an evolutionary algorithm, a model of biological evolution: rank fitness, crossover of best performing, mutation, run next generation.
 
+The initial generation is made up of individuals with random strategies, the output is a strategy that is optimized to solve the given problem
 
-This library can optimize your agent's performance by way of an evolutionary algorithm, a model of biological evolution: rank fitness, crossover of best performing, mutation, run next generation.
+The algorithm is agnostic to the actual problem, it is primarily specified through the getFitness function
 
-You provide the environment, or "program" as the property is called, (problem to optimze, machine to teach, etc) and a way to calculate and rank fitness, and this algorithm will handle crossover, mutation, and the automatic generation cycles.
+# Usage
 
-It can be implemented on the frontend of any JavaScript web application or on the server itself in a NodeJS application, which of course provides much higher performance. This algorithm is highly computationally intensive and will take time to complete the sufficient generations that will give an optimum solution, but the results are worth it.  
+`npm install @methodswithclass/evolve`
 
-To implement the algorithm on the frontend, create an object with the following properties and call these functions:
+`import Evolve from @methodswithclass/evolve`
 
-	var input = {
-		name:"description string",
-		gens:100, // total generations
-		runs:20, // runs of scenerio per individual
-		goal:"max", // "min" and "max" determine internally if the population is ranked by highest or lowest fitness, depending on the goal of the evolution process
-		pop:100, // total individuals in population
-		runProcess:"async", // whether the loop that runs each individual in the generation is syncronous or asyncronous
-		method:"multi-parent", // the crossover method, many parents creating one offspring, or two parents creating many offspring
-		parents:2, // the number of parents to choose out of the pool of selected individuals
-		pool:0.1, // the top percentage by fitness of the population to consider as parents for the next generation
-		splicemin:2, // the minimum length of the dna strand during the splicing procedure
-		splicemax:12, // the maximum length of the dna strand during the splicing procedure
-		mutate:0.02 // the percentage of dna that are randomly changed (mutated) before the next generation is run. 
-					// this value is the critical hinge upon which this whole process depends
-		programInput:programInput, // this is a generic object to attach any data you see fit for your program that may assist in running your program, 
-									// it can be used in any manner you wish
-		evdelay:0, // delay between the completion of one generation and beginning of the next, 0 for no delay 
-		program:program, // the module for the problem being optimized, details below
+The input consists of options for the evolutionary algorithm and the specification of your problem.
+
+## Mutate
+
+called when processing each individual
+returns a brand new strategy or a mutated strategy
+required, can be async
+
+strategy is the central object that is being optimized (any type)
+
+if input strategy is undefined then return a brand new strategy with random values, if it exists, return a copy of it, with some values newly randomized by some percentage
+
+this function would typically return a randomly valued item (within a relevant range)
+
+```
+const mutate = async (strategy) => {
+	return newStrategy // can be any type, typically the strategy is a consistent type
+}
+
+```
+
+## BeforeEach
+
+called before processing each new generation
+returns a boolean on whether to process the next generation, the current generation will finish
+optional, can be async
+
+generation is the number of the current generation
+
+```
+const beforeEach = async (input) => {
+	const { generation, first, last } = input;
+	return true/false // must explicitly return false if you want the process to stop
+}
+```
+
+## AfterEach
+
+called after processing each generation
+returns nothing
+optional, can be async
+
+generation is the number of the current generation
+best is the top performing individual of the generation: { strategy, fitness }
+
+```
+const afterEach = async (input) => {
+	const { generation, best } = input;
+	no return
+}
+```
+
+## OnEnd
+
+called when all the generations have been processed or evolution told to stop (beforeEach returns false)
+optional, can be async
+
+generation is the number of the current generation
+best is the top performing individual of the generation: { strategy, fitness }
+
+```
+const onEnd = async (input) => {
+	const { generation, best } = input;
+	no return
+}
+```
+
+## GetFitness
+
+the primary definition of your problem, it takes a strategy and runs it against the problem to produce a measure of its performance, the fitness
+required, can be async
+
+populations for every generation run all individuals simultaneously, indexes not guaranteed to be in order
+strategy is the object (any type) formed by mutate(), fitness is calculated by some process on this object
+index: {generation number}#{index of individual in population array}
+id: {unique id for generation}#{unique id for individual}
+returns the fitness of an individual (any type), can be async
+this fitness is then passed into rank
+
+```
+const getFitness = async (input) => {
+	const { index, id, strategy } = input;
+	return fitness;
+}
+
+```
+
+## Combine
+
+called during generation crossover
+required, can be async
+
+strategies are pulled from the top performers of the generation at random
+
+```
+const combine = async (strategyA, strategyB) => {
+	return newStrategy
+}
+
+```
+
+## Rank
+
+comparator according to Array.sort(),
+optional, must be synchronous
+
+some function according to your optimization and fitness scheme/type
+if not included Evolve will treat the fitness as a number, and will maximize it
+
+```
+const rank = (fitnessA, fitnessB) => {
+	return fitnessB - fitnessA;
+}
+```
+
+## Initialization
+
+```
+const input = {
+	first, // first generation number, required
+	last, // last generation number, must be greater than first, required
+	best, // initial best performer { strategy, fitness }, optional, used when first is not 1, when this is included, all individuals in the first generation are mutated versions of this
+	popTotal, // number of individuals per generation, required, defaults to 100
+	beforeEach,
+	afterEach,
+	onEnd,
+	getFitness,
+	combine,
+	rank,
+	mutate,
+}
+
+const evolve = Evolve(input);
+
+await evolve.start();
+
+evolve.stop();
+```
+
+process auto-stops when the current generation equals the value in `last`
+
+# Example
+
+```
+const totalGenes = 100;
+
+const getGene = () => {
+	return Math.random();
+}
+
+const mutate = (strategy) => {
+
+	const newStrategy = [];
+
+	if (!strategy) {
+		for (let i = 0, i < totalGenes; i++) {
+			newStrategy.push(getGene());
+		}
+		return newStrategy;
 	}
 
-	var evolution = new evolve.module();
+	const mutatedStrategy = strategy.map(item => {
+		if (Math.random() < 0.02) {
+			return getGene();
+		}
 
-	evolution.set(input);
+		return item;
+	})
 
-	evolution.initialize(input);
+	return mutatedStrategy;
+}
 
-then start the evolution process like this:
+const combine = (a, b) => {
+	const aSegment = a.slice(0, totalGenes/2);
+	const bSegment = b.slice(totalGenes/2);
 
-	evolution.run(input);
+	return [...aSegment, ...bSegment];
+}
 
+const getFitness = ({ strategy }) => {
+	const fitness = strategy.reduce((total, item)  => {
+		if (1 - item < 0.01) {
+			return total + 50
+		}
+		return total - 20;
+	}, 0);
 
-You can stop the evolution process by calling:
+	return fitness;
+}
 
-	evolution.hardStop(input);
+let bestPerformer;
 
+const evolve = Evolve({
+	first: 1,
+	last: 100
+	popTotal: 100,
+	afterEach: ({ generation, best }) => {
+		console.log("current generation", generation);
+		bestPerformer = best;
+	},
+	getFitness,
+	mutate,
+	combine,
+})
 
-Then if you want to restart simply call the run function again with input.gens greater than the current value:
+await evolve.start();
 
-	evolution.run(input); //the total generations to be calculateed needs to be increased,
-							// note that if the goal for the process changes, or the size of the population changes,
-							// the process will have to be re-initialized and start from the first generation
+const { strategy, fitness } = bestPerformer;
 
-
-The program you write that represents the problem being optimized must adhere to the following API:
-
-
-It must expose the following public functions, each will be called at some point in the evolutionary algorithm process by the evolve package:
-
-	{
-		run:run, // this function will be called to run the evolution process, it may invoke further processes in whatever way it requires to calculate fitness for the individual
-		gene:gene, // this generates and returns a single new gene, an individual piece of dna
-		hardStop:hardStop, // this is called to stop immediately any processes running that were started by calling the run function
-	} 
-
-
-There are a few caveates about the input object for the this package. The program, setEvdata callback, and the completeEvolve callback need to be handled differently depending on whether the evolutionary algorithm and this package run on the frontend or the backend. If the application runs on the frontend, then all three can be included in the input object directly. Obviously, if implementing on the backend, you cannot send module and function objects over an http request. So you will have to devise a way to retrieve your program (already on the backend) when you send this input object and intialize everything. As for the setEvdata callback, this data refers to the best individual of each generation. All that has to be done is to recursively make an http request to an api that calls and returns evolve.module.getBest(). Same for completeEvolve, write a recurive http request that calls and returns evolve.module.running() and when it returns false, simply call whatever function you would have included as your callback in the input object (this will work if the process is stopped automatically or manually).
-
-
-There are other things to consider for a backend implementation, if there any questions, please don't hesitate to send me an email. When I have the time, I plan on expounding on the wiki and an robust api reference.
-
-
-chris@mwclass.io
-
-
-
-My working example of this algorithm put to extensive use can be found at https://evolve.methodswithclass.com. It is applied to various problems like machine learning and image recognition. 
-
+this resulting strategy will be an array of values all close to 1;
+```
