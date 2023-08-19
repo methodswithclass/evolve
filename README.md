@@ -17,7 +17,9 @@ The input consists of options for the evolutionary algorithm and the specificati
 ## Mutate
 
 called when processing each individual
+
 returns a brand new strategy or a mutated strategy
+
 required, can be async
 
 strategy is the central object that is being optimized (any type)
@@ -36,7 +38,9 @@ const mutate = async (strategy) => {
 ## BeforeEach
 
 called before processing each new generation
+
 returns a boolean on whether to process the next generation, the current generation will finish
+
 optional, can be async
 
 generation is the number of the current generation
@@ -51,10 +55,13 @@ const beforeEach = async (input) => {
 ## AfterEach
 
 called after processing each generation
+
 returns nothing
+
 optional, can be async
 
 generation is the number of the current generation
+
 best is the top performing individual of the generation: { strategy, fitness }
 
 ```
@@ -67,9 +74,11 @@ const afterEach = async (input) => {
 ## OnEnd
 
 called when all the generations have been processed or evolution told to stop (beforeEach returns false)
+
 optional, can be async
 
 generation is the number of the current generation
+
 best is the top performing individual of the generation: { strategy, fitness }
 
 ```
@@ -82,13 +91,19 @@ const onEnd = async (input) => {
 ## GetFitness
 
 the primary definition of your problem, it takes a strategy and runs it against the problem to produce a measure of its performance, the fitness
+
 required, can be async
 
 populations for every generation run all individuals simultaneously, indexes not guaranteed to be in order
+
 strategy is the object (any type) formed by mutate(), fitness is calculated by some process on this object
+
 index: {generation number}#{index of individual in population array}
+
 id: {unique id for generation}#{unique id for individual}
+
 returns the fitness of an individual (any type), can be async
+
 this fitness is then passed into rank
 
 ```
@@ -102,6 +117,7 @@ const getFitness = async (input) => {
 ## Combine
 
 called during generation crossover
+
 required, can be async
 
 strategies are pulled from the top performers of the generation at random
@@ -116,9 +132,11 @@ const combine = async (strategyA, strategyB) => {
 ## Rank
 
 comparator according to Array.sort(),
+
 optional, must be synchronous
 
 some function according to your optimization and fitness scheme/type
+
 if not included Evolve will treat the fitness as a number, and will maximize it
 
 ```
