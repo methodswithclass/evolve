@@ -5,7 +5,7 @@ const defaultRank = (a, b) => {
   return b - a;
 };
 
-function Generation(input) {
+const Generation = function (input) {
   const self = this;
 
   const {
@@ -152,6 +152,6 @@ function Generation(input) {
       item.stop();
     });
   };
-}
+};
 
 export default Generation;

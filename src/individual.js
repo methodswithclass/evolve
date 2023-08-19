@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 
-function Individual(input) {
+const Individual = function (input) {
   const self = this;
 
   const {
@@ -115,6 +115,6 @@ function Individual(input) {
   self.stop = () => {
     _active = false;
   };
-}
+};
 
 export default Individual;

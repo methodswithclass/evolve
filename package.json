@@ -3,9 +3,14 @@
   "version": "7.0.1",
   "description": "This library optimizes your agent's performance by way of an evolutionary algorithm, a model of biological evolution: rank fitness, crossover of best performing, mutation, run next generation.",
   "main": "dist/main.js",
+  "browser": "dist/main.browser.js",
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack"
@@ -24,7 +29,6 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "babel-loader": "^9.1.3",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
   }

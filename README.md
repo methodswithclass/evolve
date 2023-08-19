@@ -178,62 +178,61 @@ const totalGenes = 100;
 
 const getGene = () => {
 	return Math.random();
-}
+};
 
 const mutate = (strategy) => {
-
 	const newStrategy = [];
 
 	if (!strategy) {
-		for (let i = 0, i < totalGenes; i++) {
+		for (let i = 0; i < totalGenes; i++) {
 			newStrategy.push(getGene());
 		}
 		return newStrategy;
 	}
 
-	const mutatedStrategy = strategy.map(item => {
+	const mutatedStrategy = strategy.map((item) => {
 		if (Math.random() < 0.02) {
 			return getGene();
 		}
 
 		return item;
-	})
+	});
 
 	return mutatedStrategy;
-}
+};
 
 const combine = (a, b) => {
-	const aSegment = a.slice(0, totalGenes/2);
-	const bSegment = b.slice(totalGenes/2);
+	const aSegment = a.slice(0, totalGenes / 2);
+	const bSegment = b.slice(totalGenes / 2);
 
 	return [...aSegment, ...bSegment];
-}
+};
 
 const getFitness = ({ strategy }) => {
-	const fitness = strategy.reduce((total, item)  => {
+	const fitness = strategy.reduce((total, item) => {
 		if (1 - item < 0.01) {
-			return total + 50
+			return total + 50;
 		}
 		return total - 20;
 	}, 0);
 
 	return fitness;
-}
+};
 
 let bestPerformer;
 
 const evolve = Evolve({
 	first: 1,
-	last: 100
+	last: 100,
 	popTotal: 100,
 	afterEach: ({ generation, best }) => {
-		console.log("current generation", generation);
+		console.log('current generation', generation);
 		bestPerformer = best;
 	},
 	getFitness,
 	mutate,
 	combine,
-})
+});
 
 await evolve.start();
 
